@@ -84538,7 +84538,7 @@ UpdateSound: ; e805c
 	; get next note
 	call ParseMusic
 .asm_e8093
-	; 
+	;
 	call Functione84f9
 	; duty cycle
 	ld hl, Channel1DutyCycle - Channel1
@@ -84565,7 +84565,7 @@ UpdateSound: ; e805c
 	cp a, $04
 	jr nc, .next
 	; are any sfx channels active?
-	; if so, mute 
+	; if so, mute
 	ld hl, $c1cc ; Channel5Flags
 	bit 0, [hl]
 	jr nz, .restnote
@@ -85349,7 +85349,7 @@ Functione84f9: ; e84f9
 	ld e, [hl]
 	inc hl
 	ld d, [hl]
-	; 
+	;
 	ld hl, Channel1Flags3 - Channel1
 	add hl, bc
 	bit 1, [hl]
@@ -85460,7 +85460,7 @@ HandleNoise: ; e858c
 	; is ch8 playing noise?
 	bit 4, [hl]
 	ret nz ; quit if so
-	; 
+	;
 .next
 	ld a, [$c2a2]
 	and a
@@ -85585,7 +85585,7 @@ ParseMusic: ; e85e1
 	ld hl, Channel1Flags - Channel1
 	add hl, bc
 	bit 1, [hl] ; in a subroutine?
-	jr nz, .readcommand ; execute 
+	jr nz, .readcommand ; execute
 	ld a, [CurChannel]
 	cp a, $04 ; channels 0-3?
 	jr nc, .asm_e8651
@@ -85769,8 +85769,8 @@ MusicCommands: ; e8720
 	dw MusicDC ; intensity
 	dw MusicDD ; update sound status
 	dw MusicDE ; ???? + duty cycle
-	dw MusicDF ; 
-	dw MusicE0 ; 
+	dw MusicDF ;
+	dw MusicE0 ;
 	dw MusicE1 ; vibrato
 	dw MusicE2 ;
 	dw MusicE3 ; music noise sampling
@@ -85796,7 +85796,7 @@ MusicCommands: ; e8720
 	dw MusicF1 ; nothing
 	dw MusicF1 ; nothing
 	dw MusicF9 ;
-	dw MusicFA ; 
+	dw MusicFA ;
 	dw MusicFB ;
 	dw MusicFC ; jump
 	dw MusicFD ; loop
@@ -86555,7 +86555,7 @@ GetFrequency: ; e8a5d
 	add hl, bc
 	ld a, [hl]
 	and a, $0f ; lo nybble
-	; 
+	;
 	ld l, a ; ok
 	ld d, $00
 	ld h, d
@@ -87066,7 +87066,7 @@ PlaySFX: ; e8ca6
 LoadChannel: ; e8d1b
 ; prep channel for use
 ; input:
-; 	de: 
+; 	de:
 	; get pointer to current channel
 	call FarLoadMusicByte
 	inc de
@@ -87946,12 +87946,12 @@ SFX: ; e927c
 	dbw $3c, $4b18 ; sky attack
 	dbw $3c, $4b21 ; hyper beam
 	dbw $3c, $4b24 ; shine
-	dbw $3c, $4a1c ; 
+	dbw $3c, $4a1c ;
 	dbw $3c, $4a1f ; $60
 	dbw $3c, $4a22 ; tap
 	dbw $3c, $4a25 ; tap
 	dbw $3c, $4a28 ; burn ; that is not a burn
-	dbw $3c, $4a2b ; 
+	dbw $3c, $4a2b ;
 	dbw $3c, $4a2e ; similar to $60
 	dbw $3c, $4a31 ; get coin from slots
 	dbw $3c, $4a34 ; pay day
