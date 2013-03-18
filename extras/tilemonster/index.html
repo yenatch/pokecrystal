@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+
+	<meta charset=utf-8>
+
+	<title>
+	</title>
+
+	<style type=text/css>
+	body {
+		color: #cccccc;
+		font-family: sans-serif;
+		background-color: #555555;
+	}
+	
+	canvas {
+	}
+	
+	div {
+	}
+	
+	div#bar {
+		background-color: #000000;
+		position: fixed;
+		top: -36px;
+		left: 2.5%;
+		width: 95%;
+		height: 48px;
+		border-bottom-left-radius: 24px;
+		border-bottom-right-radius: 24px;
+		-webkit-transition: top 0.5s;
+	}
+	div#bar:hover {
+		top: 0px;
+	}
+	
+	div#barchild {
+		cursor: default;
+		display: inline;
+		color: #aaa;
+		position:  relative;
+		padding-left: 16px;
+		padding-right: 16px;
+		top: 0px;
+		font-weight: bold;
+		width: 24px;
+		height: 24px;
+		line-height: 18px;
+		font-size: 32px;
+	}
+	div#barchild:hover {
+		color: #ccb;
+	}
+	div#barchild:active {
+		color: #998;
+	}
+	form#ptile {
+		display: inline;
+		width: 50px;
+	}
+	input#ptilei {
+		position: relative;
+		top: -3px;
+		font-size: 24px;
+		font-weight: bold;
+		width: 42px;
+		padding: 4px;
+		border: 0px;
+		border-radius: 14px;
+	}
+	</style>
+
+	<script src="map_names.js"></script>
+	<script src="map_editor.js"></script>
+
+</head>
+
+<body onload="main()">
+</body>
+</html>
