@@ -20,6 +20,12 @@ function init() {
 	
 }
 
+function updatePaintTile(painttile) {
+	for (i=0; i < controller.painters.length; i++) {
+		controller.painters[i].paint_tile = painttile || 1;
+	}
+}
+
 var Controller = function() {
 	this.painters = [];
 	
@@ -29,12 +35,19 @@ var Controller = function() {
 	this.divs = [];
 	
 	this.divs[0] = document.createElement('div');
-	this.divs[0].id = 'barchild';
+	this.divs[0].className = 'barchild';
 	this.divs[0].innerHTML = '+';
 	
 	this.divs[0].onclick = function(e) {
 		var id = controller.painters.length || 0;
 		controller.painters[id] = new Painter(new Map(id, 1, id+1));
+		
+		if (document.getElementById('picker').innerHTML != '') {
+			controller.divs[2].innerHTML = '';
+		}
+		controller.picker = (new Picker(new Map(id, 1, id+1)));
+		controller.divs[2].appendChild(controller.picker.map.canvas);
+		
 		setTimeout('\
 			var id = '+id+';\
 			if (controller.painters[id].map.tileset.img.complete) {\
@@ -44,14 +57,16 @@ var Controller = function() {
 	};
 	
 	this.divs[1] = document.createElement('div');
-	this.divs[1].id = 'barchild';
+	this.divs[1].className = 'barchild';
 	this.divs[1].innerHTML = '<form id="ptile"><input id="ptilei" type="text" name="ptile" maxlength="3" value="1" autocomplete="off"></form>';
 	this.divs[1].onsubmit = function(e) {
-		for (i=0; i < controller.painters.length; i++) {
-			controller.painters[i].paint_tile = document.forms['ptile']['ptile'].value || 1;
-		}
+		updatePaintTile(document.forms['ptile']['ptilei'].value);
 		return false;
 	};
+	
+	this.divs[2] = document.createElement('div');
+	this.divs[2].className = 'barchild';
+	this.divs[2].id = 'picker';
 	
 	for (i=0; i<this.divs.length; i++) {
 		this.bar.appendChild(this.divs[i]);
@@ -61,9 +76,41 @@ var Controller = function() {
 	return this;
 }
 
+var Picker = function(pmap) {
+	this.tileset = pmap.tileset;
+	this.map = new Map('pickerc', pmap.group, pmap.num);
+	this.map.blockdata = '';
+	for (i=0; i<(this.map.tileset.metatiles.length); i++) {
+		this.map.blockdata += String.fromCharCode(i);
+	}
+	this.map.width = this.map.blockdata.length;
+	this.map.height = 1;
+	console.log(this.map.canvas);
+	this.map.canvas.width = this.map.width * this.map.tileset.metaw * this.map.tileset.tilew;
+	this.map.canvas.height = this.map.height * this.map.tileset.metah * this.map.tileset.tileh;
+	
+	this.map.canvas.onclick = function(e) {
+		var selfK = controller.picker;
+		var pickx = Math.floor(
+			(e.pageX - selfK.map.canvas.getBoundingClientRect().left)/(selfK.map.tileset.tilew*selfK.map.tileset.metaw),
+			selfK.map.tileset.tilew
+		);
+		var picky = Math.floor(
+			(e.pageY - selfK.map.canvas.getBoundingClientRect().top)/(selfK.map.tileset.tileh*selfK.map.tileset.metah),
+			selfK.map.tileset.tileh
+		);
+		document.forms['ptile']['ptilei'].value = picky*selfK.map.width + pickx;
+		updatePaintTile(picky*selfK.map.width + pickx);
+	}
+	
+	this.map.draw();
+}
+
 var Painter = function(pmap) {
 	
 	this.map = pmap;
+	
+	document.body.appendChild(this.map.canvas);
 	
 	// tile paint
 	
@@ -123,11 +170,11 @@ var Painter = function(pmap) {
 		} catch(err) { };
 		
 		selfP.lastx = Math.floor(
-			(e.pageX - selfP.map.canvas.offsetLeft)/(selfP.map.highlight.tilew*selfP.map.highlight.metaw),
+			(e.pageX - selfP.map.canvas.getBoundingClientRect().left)/(selfP.map.highlight.tilew*selfP.map.highlight.metaw),
 			selfP.map.highlight.tilew
 		);
 		selfP.lasty = Math.floor(
-			(e.pageY - selfP.map.canvas.offsetTop)/(selfP.map.highlight.tileh*selfP.map.highlight.metah),
+			(e.pageY - selfP.map.canvas.getBoundingClientRect().top)/(selfP.map.highlight.tileh*selfP.map.highlight.metah),
 			selfP.map.highlight.tileh
 		);
 		selfP.map.drawMetatile(
@@ -229,9 +276,11 @@ var Map = function(id, group, num) {
 	this.width   = map_names[group][num]['header_old']['second_map_header']['width'];
 	this.height  = map_names[group][num]['header_old']['second_map_header']['height'];
 	
-	this.cwidth  = this.width  * this.tileset.tilew * this.tileset.metaw;
-	this.cheight = this.height * this.tileset.tileh * this.tileset.metah;
-	this.canvas  = addCanvas(this.id, this.cwidth, this.cheight);
+	this.canvas  = canvas(
+		this.id,
+		this.width  * this.tileset.tilew * this.tileset.metaw,
+		this.height * this.tileset.tileh * this.tileset.metah
+	);
 	this.context = this.canvas.getContext('2d');
 	
 	this.getBlockData();

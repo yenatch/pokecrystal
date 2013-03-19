@@ -8,7 +8,7 @@
 	</title>
 
 	<style type=text/css>
-	body {
+	html, body {
 		color: #cccccc;
 		font-family: sans-serif;
 		background-color: #555555;
@@ -21,6 +21,7 @@
 	}
 	
 	div#bar {
+		overflow: hidden;
 		background-color: #000000;
 		position: fixed;
 		top: -36px;
@@ -35,7 +36,23 @@
 		top: 0px;
 	}
 	
-	div#barchild {
+	div#picker {
+		overflow-y: hidden;
+		overflow-x: scroll;
+		padding-left: 0;
+		padding-right: 0;
+		padding-top: 0;
+		padding-bottom: 0;
+		width: 80%;
+		height: 60px;
+		display: block;
+		left: 132px;
+		top: -36px;
+	}
+	canvas#pickerc {
+	}
+	
+	.barchild {
 		cursor: default;
 		display: inline;
 		color: #aaa;
@@ -49,10 +66,10 @@
 		line-height: 18px;
 		font-size: 32px;
 	}
-	div#barchild:hover {
+	.barchild:hover {
 		color: #ccb;
 	}
-	div#barchild:active {
+	.barchild:active {
 		color: #998;
 	}
 	form#ptile {
