@@ -92,11 +92,11 @@ var Picker = function(pmap) {
 	this.map.canvas.onclick = function(e) {
 		var selfK = controller.picker;
 		var pickx = Math.floor(
-			(e.pageX - selfK.map.canvas.getBoundingClientRect().left)/(selfK.map.tileset.tilew*selfK.map.tileset.metaw),
+			(e.pageX - selfK.map.canvas.getBoundingClientRect().left - window.scrollX)/(selfK.map.tileset.tilew*selfK.map.tileset.metaw),
 			selfK.map.tileset.tilew
 		);
 		var picky = Math.floor(
-			(e.pageY - selfK.map.canvas.getBoundingClientRect().top)/(selfK.map.tileset.tileh*selfK.map.tileset.metah),
+			(e.pageY - selfK.map.canvas.getBoundingClientRect().top - window.scrollY)/(selfK.map.tileset.tileh*selfK.map.tileset.metah),
 			selfK.map.tileset.tileh
 		);
 		document.forms['ptile']['ptilei'].value = picky*selfK.map.width + pickx;
@@ -170,11 +170,11 @@ var Painter = function(pmap) {
 		} catch(err) { };
 		
 		selfP.lastx = Math.floor(
-			(e.pageX - selfP.map.canvas.getBoundingClientRect().left)/(selfP.map.highlight.tilew*selfP.map.highlight.metaw),
+			(e.pageX - selfP.map.canvas.getBoundingClientRect().left - window.scrollX)/(selfP.map.highlight.tilew*selfP.map.highlight.metaw),
 			selfP.map.highlight.tilew
 		);
 		selfP.lasty = Math.floor(
-			(e.pageY - selfP.map.canvas.getBoundingClientRect().top)/(selfP.map.highlight.tileh*selfP.map.highlight.metah),
+			(e.pageY - selfP.map.canvas.getBoundingClientRect().top - window.scrollY)/(selfP.map.highlight.tileh*selfP.map.highlight.metah),
 			selfP.map.highlight.tileh
 		);
 		selfP.map.drawMetatile(
