@@ -139,20 +139,22 @@ var Painter = function(pmap) {
 	}
 	
 	function resetPaint(e) {
-		this.paintint = setInterval(function(){checkPaint(e);}, 16);
-		this.paintedthisclick = false;
-		this.mousedown = true;
+		var selfP = controller.painters[e.target.id];
+		selfP.paintint = setInterval(function(){checkPaint(e);}, 16);
+		selfP.paintedthisclick = false;
+		selfP.mousedown = true;
 	}
 	
 	function stopPaint(e) {
-		clearInterval(this.paintint);
-		this.mousedown = false;
-		try {
-			this.map.drawMetatile(
-				this.map.blockdata.charCodeAt(this.lasty*this.map.width+this.lastx),
-				this.lastx, this.lasty, this.map.tileset
-			);
-		} catch(err) { };
+		var selfP = controller.painters[e.target.id];
+		clearInterval(selfP.paintint);
+		selfP.mousedown = false;
+		selfP.map.drawMetatile(
+			selfP.map.blockdata.charCodeAt((selfP.lasty||selfP.painty)*selfP.map.width+(selfP.lastx||selfP.paintx)),
+			selfP.lastx||selfP.paintx, selfP.lasty||selfP.painty, selfP.map.tileset
+		);
+		selfP.lastx = undefined;
+		selfP.lasty = undefined;
 	}
 	
 	this.map.canvas.onmousedown   = function(e) { resetPaint(e); }
