@@ -40,12 +40,12 @@ var Controller = function() {
 	
 	this.divs[0].onclick = function(e) {
 		var id = controller.painters.length || 0;
-		controller.painters[id] = new Painter(new Map(id, 1, id+1));
+		controller.painters[id] = new Painter(getMapById(id, 1, id+1));
 		
 		if (document.getElementById('picker').innerHTML != '') {
 			controller.divs[2].innerHTML = '';
 		}
-		controller.picker = (new Picker(new Map(id, 1, id+1)));
+		controller.picker = (new Picker(getMapById(id, 1, id+1)));
 		controller.divs[2].appendChild(controller.picker.map.canvas);
 		
 		setTimeout('\
@@ -78,7 +78,7 @@ var Controller = function() {
 
 var Picker = function(pmap) {
 	this.tileset = pmap.tileset;
-	this.map = new Map('pickerc', pmap.group, pmap.num);
+	this.map = getMapById('pickerc', pmap.group, pmap.num);
 	this.map.blockdata = '';
 	for (i=0; i<(this.map.tileset.metatiles.length); i++) {
 		this.map.blockdata += String.fromCharCode(i);
@@ -266,17 +266,24 @@ var Painter = function(pmap) {
 */
 
 
+function getMapById(id, group, num) {
+	return new Map(id, group, num);
+}
 
-var Map = function(id, group, num) {
+function getCustomMap(id, width, height, tileset, blockfile) {
+	return new Map(id, undefined, undefined, width, height, tileset, blockfile);
+}
+
+var Map = function(id, group, num, width, height, tileset, blockfile) {
 	this.id      = id    || 0;
 	this.group   = group || 1;
 	this.num     = num   || 1;
 	
-	this.tileset = new Tileset(map_names[group][num]['header_old']['tileset']);
-	this.highlight = new Tileset(map_names[group][num]['header_old']['tileset'],undefined,undefined,undefined,undefined,undefined,undefined,255);
+	this.tileset   = new Tileset(tileset || map_names[group][num]['header_old']['tileset']);
+	this.highlight = new Tileset(tileset || map_names[group][num]['header_old']['tileset'], 255);
 	
-	this.width   = map_names[group][num]['header_old']['second_map_header']['width'];
-	this.height  = map_names[group][num]['header_old']['second_map_header']['height'];
+	this.width   = width  || map_names[group][num]['header_old']['second_map_header']['width'];
+	this.height  = height || map_names[group][num]['header_old']['second_map_header']['height'];
 	
 	this.canvas  = canvas(
 		this.id,
@@ -285,7 +292,7 @@ var Map = function(id, group, num) {
 	);
 	this.context = this.canvas.getContext('2d');
 	
-	this.getBlockData();
+	this.getBlockData(blockfile);
 	
 	return this;
 };
@@ -315,8 +322,8 @@ Map.prototype.drawMetatile = function(id, tx, ty, tset) {
 	}
 }
 
-Map.prototype.getBlockData = function() {
-	filename =
+Map.prototype.getBlockData = function(filename) {
+	filename = filename ||
 		blockdata_dir+
 		(map_names[this.group][this.num]['label']||map_names[this.group][this.num]['name'])
 		.replace(/\s+/g, '')
@@ -329,7 +336,7 @@ Map.prototype.getBlockData = function() {
 }
 
 
-var Tileset = function(id, tilew, tileh, metaw, metah, collw, collh, alpha) {
+var Tileset = function(id, alpha, tilew, tileh, metaw, metah, collw, collh) {
 	this.id         = id    || 0;
 	this.tilew      = tilew || 8;
 	this.tileh      = tileh || 8;
