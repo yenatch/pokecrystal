@@ -160,7 +160,7 @@ var Painter = function(pmap) {
 		selfP.map.draw();
 	}
 	
-	this.map.canvas.onmousedown   = function(e) { stopPaint(e); resetPaint(e); }
+	this.map.canvas.onmousedown   = function(e) { stopPaint(e); resetPaint(e); e.preventDefault(); }
 	this.map.canvas.onmouseup     = function(e) { stopPaint(e); }
 	this.map.canvas.onmouseout    = function(e) { stopPaint(e); }
 	this.map.canvas.oncontextmenu = function(e) { stopPaint(e); }
