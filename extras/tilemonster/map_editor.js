@@ -22,7 +22,7 @@ function init() {
 
 function updatePaintTile(painttile) {
 	for (i=0; i < controller.painters.length; i++) {
-		controller.painters[i].paint_tile = painttile || 1;
+		controller.painters[i].paint_tile = painttile || 0;
 	}
 }
 
@@ -104,7 +104,7 @@ var Picker = function(pmap) {
 			selfK.map.tileset.tileh
 		);
 		document.forms['ptile']['ptilei'].value = picky*selfK.map.width + pickx;
-		updatePaintTile(picky*selfK.map.width + pickx);
+		updatePaintTile(document.forms['ptile']['ptilei'].value);
 	}
 	
 	this.map.draw();
