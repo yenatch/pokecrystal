@@ -67,6 +67,10 @@ var Controller = function() {
 	this.divs[2] = document.createElement('div');
 	this.divs[2].className = 'barchild';
 	this.divs[2].id = 'picker';
+	this.divs[2].addEventListener('mousewheel', function(e) {
+		this.scrollLeft -= (e.wheelDelta);
+		e.preventDefault();
+	}, false);
 	
 	for (i=0; i<this.divs.length; i++) {
 		this.bar.appendChild(this.divs[i]);
