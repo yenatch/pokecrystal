@@ -131,16 +131,15 @@ var Painter = function(pmap) {
 	this.painty = undefined;
 	this.lastx = undefined;
 	this.lasty = undefined;
-	this.paintedthisclick = false;
 	
 	checkPaint = function(e) {
 		var selfP = controller.painters[e.target.id];
-		if ((selfP.paintx !== selfP.lastx) | (selfP.painty !== selfP.lasty) | (selfP.paintedthisclick === false)) {
-			selfP.paintedthisclick = true;
+		if (selfP.paintx !== selfP.lastx || selfP.painty !== selfP.lasty) {
 			selfP.paintx = selfP.lastx;
 			selfP.painty = selfP.lasty;
 			selfP.lasttile = selfP.map.blockdata.charCodeAt(selfP.painty*selfP.map.width+selfP.paintx);
 			selfP.map.blockdata = selfP.map.blockdata.replaceCharCodeAt(selfP.painty*selfP.map.width+selfP.paintx, selfP.paint_tile);
+			selfP.map.draw();
 			selfP.map.drawMetatile(
 				selfP.map.blockdata.charCodeAt(selfP.painty*selfP.map.width+selfP.paintx),
 				selfP.paintx, selfP.painty, selfP.map.highlight
@@ -153,26 +152,18 @@ var Painter = function(pmap) {
 	function resetPaint(e) {
 		var selfP = controller.painters[e.target.id];
 		selfP.paintint = setInterval(function(){checkPaint(e);}, 16);
-		selfP.paintedthisclick = false;
-		selfP.mousedown = true;
 	}
 	
 	function stopPaint(e) {
 		var selfP = controller.painters[e.target.id];
 		clearInterval(selfP.paintint);
-		selfP.mousedown = false;
-		selfP.map.drawMetatile(
-			selfP.map.blockdata.charCodeAt((selfP.lasty||selfP.painty)*selfP.map.width+(selfP.lastx||selfP.paintx)),
-			selfP.lastx||selfP.paintx, selfP.lasty||selfP.painty, selfP.map.tileset
-		);
-		selfP.lastx = undefined;
-		selfP.lasty = undefined;
+		selfP.map.draw();
 	}
 	
-	this.map.canvas.onmousedown   = function(e) { resetPaint(e); }
-	this.map.canvas.onmouseup     = function(e) { stopPaint(e);  }
-	this.map.canvas.onmouseout    = function(e) { stopPaint(e);  }
-	this.map.canvas.oncontextmenu = function(e) { stopPaint(e);  }
+	this.map.canvas.onmousedown   = function(e) { stopPaint(e); resetPaint(e); }
+	this.map.canvas.onmouseup     = function(e) { stopPaint(e); }
+	this.map.canvas.onmouseout    = function(e) { stopPaint(e); }
+	this.map.canvas.oncontextmenu = function(e) { stopPaint(e); }
 	
 	this.map.canvas.onmousemove = function(e) {
 		var selfP = controller.painters[e.target.id];
