@@ -35,7 +35,6 @@ var Controller = function() {
 	this.divs = [];
 	
 	this.divs[0] = document.createElement('div');
-	this.divs[0].className = 'barchild';
 	this.divs[0].innerHTML = '+';
 	
 	this.divs[0].onclick = function(e) {
@@ -43,10 +42,10 @@ var Controller = function() {
 		controller.painters[id] = new Painter(getMapById(id, 1, id+1));
 		
 		if (document.getElementById('picker').innerHTML != '') {
-			controller.divs[2].innerHTML = '';
+			controller.divs[3].innerHTML = '';
 		}
 		controller.picker = (new Picker(getMapById(id, 1, id+1)));
-		controller.divs[2].appendChild(controller.picker.map.canvas);
+		controller.divs[3].appendChild(controller.picker.map.canvas);
 		
 		setTimeout('\
 			var id = '+id+';\
@@ -57,22 +56,28 @@ var Controller = function() {
 	};
 	
 	this.divs[1] = document.createElement('div');
-	this.divs[1].className = 'barchild';
-	this.divs[1].innerHTML = '<form id="ptile"><input id="ptilei" type="text" name="ptile" maxlength="3" value="1" autocomplete="off"></form>';
-	this.divs[1].onsubmit = function(e) {
+	this.divs[1].innerHTML = 's';
+	this.divs[1].onclick = function(e) {
+		var blk = controller.painters[0].map.blockdata;
+		window.location.href = 'data:application/octet-stream;base64,' + window.btoa(blk);
+	};
+	
+	this.divs[2] = document.createElement('div');
+	this.divs[2].innerHTML = '<form id="ptile"><input id="ptilei" type="text" name="ptile" maxlength="3" value="1" autocomplete="off"></form>';
+	this.divs[2].onsubmit = function(e) {
 		updatePaintTile(document.forms['ptile']['ptilei'].value);
 		return false;
 	};
 	
-	this.divs[2] = document.createElement('div');
-	this.divs[2].className = 'barchild';
-	this.divs[2].id = 'picker';
-	this.divs[2].addEventListener('mousewheel', function(e) {
+	this.divs[3] = document.createElement('div');
+	this.divs[3].id = 'picker';
+	this.divs[3].addEventListener('mousewheel', function(e) {
 		this.scrollLeft -= (e.wheelDelta);
 		e.preventDefault();
 	}, false);
 	
 	for (i=0; i<this.divs.length; i++) {
+		this.divs[i].className = 'barchild';
 		this.bar.appendChild(this.divs[i]);
 	}
 	document.body.appendChild(this.bar);
