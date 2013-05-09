@@ -39,7 +39,7 @@ var Controller = function() {
 	this.divs[0].innerHTML = '+';
 	
 	this.divs[0].onclick = function(e) {
-		var id = controller.painters.length || 0;
+		var id = 0; //controller.painters.length || 0;
 		controller.painters[id] = new Painter(getMapById(id, 1, id+1));
 		
 		if (document.getElementById('picker').innerHTML != '') {
@@ -77,6 +77,12 @@ var Controller = function() {
 	}
 	document.body.appendChild(this.bar);
 	
+	
+	this.window = document.createElement('div');
+	this.window.id = 'window';
+	
+	document.body.appendChild(this.window);
+	
 	return this;
 }
 
@@ -113,8 +119,10 @@ var Picker = function(pmap) {
 var Painter = function(pmap) {
 	
 	this.map = pmap;
-	
-	document.body.appendChild(this.map.canvas);
+	controller.window.style.width = this.map.canvas.width + 'px';
+	controller.window.style.height = this.map.canvas.height + 'px';
+	controller.window.innerHTML = '';
+	controller.window.appendChild(this.map.canvas);
 	
 	// tile paint
 	
