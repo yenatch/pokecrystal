@@ -93,7 +93,7 @@ var Controller = function() {
 
 var Picker = function(pmap) {
 	this.tileset = pmap.tileset;
-	this.map = getMapById('pickerc', pmap.group, pmap.num);
+	this.map = new Map('pickerc', pmap.group, pmap.num, pmap.width, pmap.height, pmap.tileset_id, pmap.blockfile);
 	this.map.blockdata = '';
 	for (i=0; i<(this.map.tileset.metatiles.length); i++) {
 		this.map.blockdata += String.fromCharCode(i);
@@ -282,16 +282,21 @@ function getCustomMap(id, width, height, tileset, blockfile) {
 	return new Map(id, undefined, undefined, width, height, tileset, blockfile);
 }
 
-var Map = function(id, group, num, width, height, tileset, blockfile) {
-	this.id      = id    || 0;
-	this.group   = group || 1;
-	this.num     = num   || 1;
+var Map = function(id, group, num, width, height, tileset_id, blockfile) {
+	this.id    = id || 0;
+	this.group = group;
+	this.num   = num;
+
+	if (this.group !== undefined || this.num !== undefined) {
+		this.tileset_id = tileset_id || map_names[this.group][this.num]['header_old']['tileset'];
+	} else {
+		this.tileset_id = tileset_id || 1;
+	}
+	this.tileset   = new Tileset(this.tileset_id);
+	this.highlight = new Tileset(this.tileset_id, 255);
 	
-	this.tileset   = new Tileset(tileset || map_names[group][num]['header_old']['tileset']);
-	this.highlight = new Tileset(tileset || map_names[group][num]['header_old']['tileset'], 255);
-	
-	this.width   = width  || map_names[group][num]['header_old']['second_map_header']['width'];
-	this.height  = height || map_names[group][num]['header_old']['second_map_header']['height'];
+	this.width  = width  || map_names[this.group][this.num]['header_old']['second_map_header']['width'];
+	this.height = height || map_names[this.group][this.num]['header_old']['second_map_header']['height'];
 	
 	this.canvas  = canvas(
 		this.id,
@@ -300,7 +305,14 @@ var Map = function(id, group, num, width, height, tileset, blockfile) {
 	);
 	this.context = this.canvas.getContext('2d');
 	
-	this.getBlockData(blockfile);
+	this.blockfile = blockfile;
+	this.blockdata = '';
+
+	if ((this.group === undefined) || (this.num === undefined) && blockfille === undefined) {
+		this.newBlockData();
+	} else {
+		this.getBlockData();
+	}
 	
 	return this;
 };
@@ -330,8 +342,8 @@ Map.prototype.drawMetatile = function(id, tx, ty, tset) {
 	}
 }
 
-Map.prototype.getBlockData = function(filename) {
-	filename = filename ||
+Map.prototype.getBlockData = function() {
+	filename = this.blockfile ||
 		blockdata_dir+
 		(map_names[this.group][this.num]['label']||map_names[this.group][this.num]['name'])
 		.replace(/\s+/g, '')
@@ -341,6 +353,13 @@ Map.prototype.getBlockData = function(filename) {
 	;
 	console.log(filename);
 	this.blockdata = getBinaryFile(filename);
+}
+
+Map.prototype.newBlockData = function() {
+	this.blockdata = '';
+	for (i=0; i<this.width*this.height; i++) {
+		this.blockdata += String.fromCharCode(1|0);
+	}
 }
 
 
