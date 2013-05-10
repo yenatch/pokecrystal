@@ -133,17 +133,18 @@ var Painter = function(pmap) {
 	
 	checkPaint = function(e) {
 		var selfP = controller.painters[e.target.id];
-		if (selfP.paintx !== selfP.lastx || selfP.painty !== selfP.lasty) {
+		var blockPos = selfP.lasty*selfP.map.width+selfP.lastx;
+		if (selfP.paintx !== selfP.lastx || selfP.painty !== selfP.lasty || selfP.paint_tile !== selfP.lasttile) {
 			selfP.paintx = selfP.lastx;
 			selfP.painty = selfP.lasty;
-			selfP.lasttile = selfP.map.blockdata.charCodeAt(selfP.painty*selfP.map.width+selfP.paintx);
-			selfP.map.blockdata = selfP.map.blockdata.replaceCharCodeAt(selfP.painty*selfP.map.width+selfP.paintx, selfP.paint_tile);
+			selfP.lasttile = selfP.map.blockdata.charCodeAt(blockPos);
+			selfP.map.blockdata = selfP.map.blockdata.replaceCharCodeAt(blockPos, selfP.paint_tile);
 			selfP.map.draw();
 			selfP.map.drawMetatile(
-				selfP.map.blockdata.charCodeAt(selfP.painty*selfP.map.width+selfP.paintx),
+				selfP.map.blockdata.charCodeAt(blockPos),
 				selfP.paintx, selfP.painty, selfP.map.highlight
 			);
-			selfP.newtile = selfP.map.blockdata.charCodeAt(selfP.painty*selfP.map.width+selfP.paintx);
+			selfP.newtile = selfP.map.blockdata.charCodeAt(blockPos);
 			console.log('paint at ' + selfP.paintx + ', ' + selfP.painty + ': ' + selfP.lasttile + ' -> ' + selfP.newtile);
 		}
 	}
