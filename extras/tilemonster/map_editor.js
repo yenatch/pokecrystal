@@ -56,7 +56,7 @@ var Controller = function() {
 		if (!document.getElementById('opendialog')) {
 			var openDialog = document.createElement('div');
 			openDialog.id = 'opendialog';
-			openDialog.innerHTML = '<form id="open"><p>BLK:<input id="blk" type="text" name="blk" value="../../maps/" autocomplete="on"><br/>Tileset:<input id="tileset" type="text" name="tileset" maxlength="2" value="1" autocomplete="off"><br/>Width:<input id="width" type="text" name="width" maxlength="2" value="20" autocomplete="off"><br/>Height:<input id="height" type="text" name="height" maxlength="2" value="20" autocomplete="off"><br/><input id="submit" name="submit" type="submit" value="open"></p></form><form id="close"><input id="close" name="close" type="submit" value="OK"></form>';
+			openDialog.innerHTML = '<form id="open"><p>BLK:<input id="blk" type="text" name="blk" value="../../maps/GoldenrodCity.blk" autocomplete="on"><br/>Tileset:<input id="tileset" type="text" name="tileset" maxlength="2" value="2" autocomplete="off"><br/>Width:<input id="width" type="text" name="width" maxlength="2" value="20" autocomplete="off"><br/>Height:<input id="height" type="text" name="height" maxlength="2" value="18" autocomplete="off"><br/><input id="submit" name="submit" type="submit" value="open"></p></form><form id="close"><input id="close" name="close" type="submit" value="OK"></form>';
 			openDialog.className = 'dialog';
 			console.log('oi sup');
 			document.body.appendChild(openDialog);
