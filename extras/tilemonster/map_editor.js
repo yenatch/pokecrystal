@@ -92,7 +92,7 @@ var Picker = function(pmap) {
 	}
 	this.map.width = this.map.blockdata.length;
 	this.map.height = 1;
-	console.log(this.map.canvas);
+	
 	this.map.canvas.width = this.map.width * this.map.tileset.metaw * this.map.tileset.tilew;
 	this.map.canvas.height = this.map.height * this.map.tileset.metah * this.map.tileset.tileh;
 	
@@ -120,6 +120,8 @@ var Painter = function(pmap) {
 	controller.window.style.height = this.map.canvas.height + 'px';
 	controller.window.innerHTML = '';
 	controller.window.appendChild(this.map.canvas);
+	controller.window.style.left = '0px';
+	controller.pickerView.style.top = '9px';
 	
 	// tile paint
 	
