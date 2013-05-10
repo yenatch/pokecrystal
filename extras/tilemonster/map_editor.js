@@ -32,21 +32,14 @@ var Controller = function() {
 	this.bar = document.createElement('div');
 	this.bar.id = 'bar';
 	
-	this.divs = [];
-	
-	this.divs[0] = document.createElement('div');
-	this.divs[0].innerHTML = '+';
-	
-	this.divs[0].onclick = function(e) {
+	this.newMapButton = document.createElement('div');
+	this.newMapButton.innerHTML = '+';
+	this.newMapButton.onclick = function(e) {
 		var id = 0; //controller.painters.length || 0;
 		controller.painters[id] = new Painter(getCustomMap(id, 20, 20));
-		
-		if (document.getElementById('picker').innerHTML != '') {
-			controller.divs[3].innerHTML = '';
-		}
 		controller.picker = (new Picker(getCustomMap(id, 20, 20)));
-		controller.divs[3].appendChild(controller.picker.map.canvas);
-		
+		controller.pickerView.innerHTML = '';
+		controller.pickerView.appendChild(controller.picker.map.canvas);
 		setTimeout('\
 			var id = '+id+';\
 			if (controller.painters[id].map.tileset.img.complete) {\
@@ -55,37 +48,36 @@ var Controller = function() {
 		', 15);
 	};
 	
-	this.divs[1] = document.createElement('div');
-	this.divs[1].innerHTML = 's';
-	this.divs[1].onclick = function(e) {
+	this.saveButton = document.createElement('div');
+	this.saveButton.innerHTML = 's';
+	this.saveButton.onclick = function(e) {
 		var blk = controller.painters[0].map.blockdata;
 		window.location.href = 'data:application/octet-stream;base64,' + window.btoa(blk);
 	};
 	
-	this.divs[2] = document.createElement('div');
-	this.divs[2].innerHTML = '<form id="ptile"><input id="ptilei" type="text" name="ptile" maxlength="3" value="1" autocomplete="off"></form>';
-	this.divs[2].onsubmit = function(e) {
+	this.pickerTileForm = document.createElement('div');
+	this.pickerTileForm.innerHTML = '<form id="ptile"><input id="ptilei" type="text" name="ptile" maxlength="3" value="1" autocomplete="off"></form>';
+	this.pickerTileForm.onsubmit = function(e) {
 		updatePaintTile(document.forms['ptile']['ptilei'].value);
 		return false;
 	};
 	
-	this.divs[3] = document.createElement('div');
-	this.divs[3].id = 'picker';
-	this.divs[3].addEventListener('mousewheel', function(e) {
+	this.pickerView = document.createElement('div');
+	this.pickerView.id = 'picker';
+	this.pickerView.addEventListener('mousewheel', function(e) {
 		this.scrollLeft -= (e.wheelDelta);
 		e.preventDefault();
 	}, false);
 	
+	this.divs = [this.newMapButton, this.saveButton, this.pickerTileForm, this.pickerView]
 	for (i=0; i<this.divs.length; i++) {
 		this.divs[i].className = 'barchild';
 		this.bar.appendChild(this.divs[i]);
 	}
 	document.body.appendChild(this.bar);
 	
-	
 	this.window = document.createElement('div');
 	this.window.id = 'window';
-	
 	document.body.appendChild(this.window);
 	
 	return this;
