@@ -48,6 +48,37 @@ var Controller = function() {
 		', 15);
 	};
 	
+	this.openButton = document.createElement('div');
+	this.openButton.innerHTML = 'o';
+	this.openButton.onclick = function(e) {
+		if (!document.getElementById('opendialog')) {
+			var openDialog = document.createElement('div');
+			openDialog.id = 'opendialog';
+			openDialog.innerHTML = '<form id="open"><p>BLK:<input id="blk" type="text" name="blk" value="../../maps/" autocomplete="on"><br/>Tileset:<input id="tileset" type="text" name="tileset" maxlength="2" value="1" autocomplete="off"><br/>Width:<input id="width" type="text" name="width" maxlength="2" value="20" autocomplete="off"><br/>Height:<input id="height" type="text" name="height" maxlength="2" value="20" autocomplete="off"><br/><input id="submit" name="submit" type="submit" value="open"></p></form><form id="close"><input id="close" name="close" type="submit" value="OK"></form>';
+			openDialog.className = 'dialog';
+			console.log('oi sup');
+			document.body.appendChild(openDialog);
+			document.forms['open'].onsubmit = function(e) {
+				e.preventDefault();
+				console.log('opened', document.forms['open']['blk'].value);
+				var id = 0; //controller.painters.length || 0;
+
+				controller.painters[id] = new Painter(getCustomMap(id, document.forms['open']['width'].value, document.forms['open']['height'].value, document.forms['open']['tileset'].value, document.forms['open']['blk'].value));
+				controller.picker = new Picker(getCustomMap(id, document.forms['open']['width'].value, document.forms['open']['height'].value, document.forms['open']['tileset'].value, document.forms['open']['blk'].value));
+				controller.pickerView.innerHTML = '';
+				controller.pickerView.appendChild(controller.picker.map.canvas);
+
+				controller.painters[id].map.draw();
+				return false;
+			};
+			document.forms['close'].onsubmit = function(e) {
+				e.preventDefault();
+				document.body.removeChild(document.getElementById('opendialog'));
+				return false;
+			};
+		}
+	}
+	
 	this.saveButton = document.createElement('div');
 	this.saveButton.innerHTML = 's';
 	this.saveButton.onclick = function(e) {
@@ -69,7 +100,7 @@ var Controller = function() {
 		e.preventDefault();
 	}, false);
 	
-	this.divs = [this.newMapButton, this.saveButton, this.pickerTileForm, this.pickerView]
+	this.divs = [this.newMapButton, this.openButton, this.saveButton, this.pickerTileForm, this.pickerView]
 	for (i=0; i<this.divs.length; i++) {
 		this.divs[i].className = 'barchild';
 		this.bar.appendChild(this.divs[i]);
@@ -273,8 +304,8 @@ function getMapById(id, group, num) {
 	return new Map(id, group, num);
 }
 
-function getCustomMap(id, width, height, tileset, blockfile) {
-	return new Map(id, undefined, undefined, width, height, tileset, blockfile);
+function getCustomMap(id, width, height, tileset_id, blockfile) {
+	return new Map(id, undefined, undefined, width, height, tileset_id, blockfile);
 }
 
 var Map = function(id, group, num, width, height, tileset_id, blockfile) {
@@ -303,7 +334,7 @@ var Map = function(id, group, num, width, height, tileset_id, blockfile) {
 	this.blockfile = blockfile;
 	this.blockdata = '';
 
-	if ((this.group === undefined) || (this.num === undefined) && blockfille === undefined) {
+	if (((this.group === undefined) || (this.num === undefined)) && this.blockfile === undefined) {
 		this.newBlockData();
 	} else {
 		this.getBlockData();
