@@ -39,12 +39,12 @@ var Controller = function() {
 	
 	this.divs[0].onclick = function(e) {
 		var id = 0; //controller.painters.length || 0;
-		controller.painters[id] = new Painter(getMapById(id, 1, id+1));
+		controller.painters[id] = new Painter(getCustomMap(id, 20, 20));
 		
 		if (document.getElementById('picker').innerHTML != '') {
 			controller.divs[3].innerHTML = '';
 		}
-		controller.picker = (new Picker(getMapById(id, 1, id+1)));
+		controller.picker = (new Picker(getCustomMap(id, 20, 20)));
 		controller.divs[3].appendChild(controller.picker.map.canvas);
 		
 		setTimeout('\
