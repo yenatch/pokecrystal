@@ -36,16 +36,18 @@ var Controller = function() {
 	this.newMapButton.innerHTML = '+';
 	this.newMapButton.onclick = function(e) {
 		var id = 0; //controller.painters.length || 0;
-		controller.painters[id] = new Painter(getCustomMap(id, 20, 20));
-		controller.picker = (new Picker(getCustomMap(id, 20, 20)));
-		controller.pickerView.innerHTML = '';
-		controller.pickerView.appendChild(controller.picker.map.canvas);
-		setTimeout('\
-			var id = '+id+';\
-			if (controller.painters[id].map.tileset.img.complete) {\
-				controller.painters[id].map.draw();\
-			}\
-		', 15);
+		if (!controller.painters[id] || window.confirm('Overwrite existing map?')) {
+			controller.painters[id] = new Painter(getCustomMap(id, 20, 20));
+			controller.picker = (new Picker(getCustomMap(id, 20, 20)));
+			controller.pickerView.innerHTML = '';
+			controller.pickerView.appendChild(controller.picker.map.canvas);
+			setTimeout('\
+				var id = '+id+';\
+				if (controller.painters[id].map.tileset.img.complete) {\
+					controller.painters[id].map.draw();\
+				}\
+			', 15);
+		}
 	};
 	
 	this.openButton = document.createElement('div');
