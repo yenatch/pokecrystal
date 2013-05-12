@@ -6,6 +6,29 @@ metatiles_dir   = '../../tilesets/';
 collision_dir   = '../../tilesets/';
 palette_map_dir = '../../tilesets/';
 
+
+// console tools
+function fill(tile_id) {
+	controller.painters[0].map.blockdata = '';
+	for (i=0; i<controller.painters[0].map.width*controller.painters[0].map.height; i++) {
+		controller.painters[0].map.blockdata += String.fromCharCode(tile_id|0);
+	}
+	controller.painters[0].map.draw();
+}
+
+function tileset(tileset_id) {
+	controller.painters[0].map.tileset_id = tileset_id;
+	controller.painters[0].map.tileset    = new Tileset(tileset_id);
+	controller.painters[0].map.highlight  = new Tileset(tileset_id, 255);
+	controller.painters[0].map.draw();
+
+	controller.picker = (new Picker(controller.painters[0].map));
+	controller.pickerView.innerHTML = '';
+	controller.pickerView.appendChild(controller.picker.map.canvas);
+	controller.picker.map.draw();
+}
+
+
 function main() {
 	init();
 }
@@ -23,7 +46,7 @@ function init() {
 function updatePaintTile(painttile) {
 	for (i=0; i < controller.painters.length; i++) {
 		controller.painters[i].paint_tile = painttile || 0;
-	}
+	}b
 }
 
 var Controller = function() {
