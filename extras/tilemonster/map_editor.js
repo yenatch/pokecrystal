@@ -184,7 +184,7 @@ var Painter = function(pmap) {
 	
 	function resetPaint(e) {
 		var selfP = controller.painters[e.target.id];
-		selfP.paintint = setInterval(function(){checkPaint(e);}, 16);
+		selfP.paintint = setInterval(function(){checkPaint(e);}, 5);
 	}
 	
 	function stopPaint(e) {
