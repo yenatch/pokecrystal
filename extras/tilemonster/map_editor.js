@@ -58,7 +58,7 @@ function resize(width, height, filler_tile) {
 		}
 		blk = ''
 		for (r=0;r<rows.length;r++) {
-			blk += rows[r].substr(0,rows[r].length);
+			blk += rows[r]
 		}
 	}
 
@@ -73,6 +73,7 @@ function resize(width, height, filler_tile) {
 		// remove rows from the bottom
 		blk = blk.substr(0,width*height);
 	}
+
 	controller.painters[0] = new Painter(getCustomMap(controller.painters[0].map.id, width, height, controller.painters[0].map.tileset_id));
 	controller.painters[0].map.blockdata = blk;
 	controller.painters[0].map.draw();
@@ -242,7 +243,7 @@ var Painter = function(pmap) {
 	checkPaint = function(e) {
 		var selfP = controller.painters[e.target.id];
 		var blockPos = selfP.lasty*selfP.map.width+selfP.lastx;
-		if (selfP.paintx !== selfP.lastx || selfP.painty !== selfP.lasty || selfP.paint_tile !== selfP.lasttile) {
+		if (selfP.paintx !== selfP.lastx || selfP.painty !== selfP.lasty || selfP.paint_tile !== selfP.newtile) {
 			selfP.paintx = selfP.lastx;
 			selfP.painty = selfP.lasty;
 			selfP.lasttile = selfP.map.blockdata.charCodeAt(blockPos);
@@ -252,7 +253,7 @@ var Painter = function(pmap) {
 				selfP.map.blockdata.charCodeAt(blockPos),
 				selfP.paintx, selfP.painty, selfP.map.highlight
 			);
-			selfP.newtile = selfP.map.blockdata.charCodeAt(blockPos);
+			selfP.newtile = selfP.paint_tile;
 			console.log('paint at ' + selfP.paintx + ', ' + selfP.painty + ': ' + selfP.lasttile + ' -> ' + selfP.newtile);
 		}
 	}
