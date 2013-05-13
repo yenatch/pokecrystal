@@ -28,6 +28,58 @@ function tileset(tileset_id) {
 	controller.picker.map.draw();
 }
 
+function resize(width, height, filler_tile) {
+	filler_tile = (filler_tile || 1) | 0;
+
+	var last_width = controller.painters[0].map.width;
+	var last_height = controller.painters[0].map.height;
+	if (last_width === width && last_height === height) return;
+
+	var blk = controller.painters[0].map.blockdata;
+
+	if (last_width < width) {
+		// append filler tiles to each row
+		rows = []
+		for (row=0;row<last_height;row++) {
+			rows.push(blk.substr(last_width*row, last_width));
+		}
+		blk = ''
+		for (r=0;r<rows.length;r++) {
+			for (i=0;i<(width-last_width);i++) {
+				rows[r] += String.fromCharCode(filler_tile);
+			}
+			blk += rows[r]
+		}
+	} else if (last_width > width) {
+		// remove tiles from each row
+		rows = []
+		for (row=0;row<last_height;row++) {
+			rows.push(blk.substr(last_width*row, width));
+		}
+		blk = ''
+		for (r=0;r<rows.length;r++) {
+			blk += rows[r].substr(0,rows[r].length);
+		}
+	}
+
+	if (last_height < height) {
+		// append filler rows to the bottom
+		for (row=0;row<(height-last_height);row++) {
+			for (i=0;i<width;i++) {
+				blk += String.fromCharCode(filler_tile);
+			}
+		}
+	} else if (last_height > height) {
+		// remove rows from the bottom
+		blk = blk.substr(0,width*height);
+	}
+	controller.painters[0] = new Painter(getCustomMap(controller.painters[0].map.id, width, height, controller.painters[0].map.tileset_id));
+	controller.painters[0].map.blockdata = blk;
+	controller.painters[0].map.draw();
+}
+
+
+
 
 function main() {
 	init();
@@ -635,5 +687,9 @@ String.prototype.zfill = function(num) {
 
 String.prototype.replaceCharCodeAt=function(index, code) {
 	return this.substr(0, index) + String.fromCharCode(code) + this.substr(index+String.fromCharCode(code).length);
+}
+
+String.prototype.insertCharCodeAt=function(index, code) {
+	return this.substr(0, index) + String.fromCharCode(code) + this.substr(index);
 }
 
