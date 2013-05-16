@@ -79,6 +79,25 @@ function resize(width, height, filler_tile) {
 	controller.painters[0].map.draw();
 }
 
+function newblk(path) {
+	var id = 0;
+	var w = controller.painters[id].map.width;
+	var h = controller.painters[id].map.height;
+	var t = controller.painters[id].map.tileset_id;
+	controller.painters[id] = new Painter(getCustomMap(id, w, h, t, path));
+	controller.painters[id].map.draw();
+}
+
+function newmap(w,h) {
+	w = w || 20;
+	h = h || 20;
+	var id = 0; //controller.painters.length || 0;
+	controller.painters[id] = new Painter(getCustomMap(id, w, h));
+	controller.picker = (new Picker(getCustomMap(id, w, h)));
+	controller.pickerView.innerHTML = '';
+	controller.pickerView.appendChild(controller.picker.map.canvas);
+	setTimeout('var id = '+id+'; controller.painters[id].map.draw();', 50);
+}
 
 
 
@@ -99,7 +118,7 @@ function init() {
 function updatePaintTile(painttile) {
 	for (i=0; i < controller.painters.length; i++) {
 		controller.painters[i].paint_tile = painttile || 0;
-	}b
+	}
 }
 
 var Controller = function() {
@@ -111,19 +130,7 @@ var Controller = function() {
 	this.newMapButton = document.createElement('div');
 	this.newMapButton.innerHTML = '+';
 	this.newMapButton.onclick = function(e) {
-		var id = 0; //controller.painters.length || 0;
-		if (!controller.painters[id] || window.confirm('Overwrite existing map?')) {
-			controller.painters[id] = new Painter(getCustomMap(id, 20, 20));
-			controller.picker = (new Picker(getCustomMap(id, 20, 20)));
-			controller.pickerView.innerHTML = '';
-			controller.pickerView.appendChild(controller.picker.map.canvas);
-			setTimeout('\
-				var id = '+id+';\
-				if (controller.painters[id].map.tileset.img.complete) {\
-					controller.painters[id].map.draw();\
-				}\
-			', 15);
-		}
+		if (!controller.painters[id] || window.confirm('Overwrite existing map?')) { newmap(); }
 	};
 	
 	this.openButton = document.createElement('div');
