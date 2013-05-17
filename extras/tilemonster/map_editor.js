@@ -220,7 +220,6 @@ var Painter = function(pmap) {
 	controller.window.style.height = this.map.canvas.height + 'px';
 	controller.window.innerHTML = '';
 	controller.window.appendChild(this.map.canvas);
-	controller.window.style.left = '0px';
 	controller.pickerView.style.top = '9px';
 	
 	// tile paint
@@ -393,6 +392,7 @@ var Map = function(id, group, num, width, height, tileset_id, blockfile) {
 	selfM.tileset.img.onload = function() {
 		selfM.tileset.getTileData();
 		selfM.draw();
+		controller.window.style.left = '0px';
 	}
 
 	this.highlight = new Tileset(this.tileset_id, 255);
