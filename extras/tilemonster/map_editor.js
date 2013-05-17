@@ -17,15 +17,10 @@ function fill(tile_id) {
 }
 
 function tileset(tileset_id) {
-	controller.painters[0].map.tileset_id = tileset_id;
-	controller.painters[0].map.tileset    = new Tileset(tileset_id);
-	controller.painters[0].map.highlight  = new Tileset(tileset_id, 255);
-	controller.painters[0].map.draw();
-
-	controller.picker = (new Picker(controller.painters[0].map));
-	controller.pickerView.innerHTML = '';
-	controller.pickerView.appendChild(controller.picker.map.canvas);
-	controller.picker.map.draw();
+	var old_blk = controller.painters[0].map.blockdata;
+	controller.painters[0] = new Painter(getCustomMap(controller.painters[0].map.id, controller.painters[0].map.width, controller.painters[0].map.height, tileset_id));
+	controller.painters[0].map.blockdata = old_blk;
+	controller.picker = new Picker(controller.painters[0].map);
 }
 
 function resize(width, height, filler_tile) {
@@ -94,9 +89,6 @@ function newmap(w,h) {
 	var id = 0; //controller.painters.length || 0;
 	controller.painters[id] = new Painter(getCustomMap(id, w, h));
 	controller.picker = (new Picker(getCustomMap(id, w, h)));
-	controller.pickerView.innerHTML = '';
-	controller.pickerView.appendChild(controller.picker.map.canvas);
-	setTimeout('var id = '+id+'; controller.painters[id].map.draw();', 50);
 }
 
 
@@ -106,13 +98,9 @@ function main() {
 }
 
 function init() {
-	
 	console.log('welcome to map editor');
-	
 	controller = new Controller();
-	
 	console.log('check out this rad map editor');
-	
 }
 
 function updatePaintTile(painttile) {
@@ -130,6 +118,7 @@ var Controller = function() {
 	this.newMapButton = document.createElement('div');
 	this.newMapButton.innerHTML = '+';
 	this.newMapButton.onclick = function(e) {
+		var id = 0;
 		if (!controller.painters[id] || window.confirm('Overwrite existing map?')) { newmap(); }
 	};
 	
@@ -141,7 +130,6 @@ var Controller = function() {
 			openDialog.id = 'opendialog';
 			openDialog.innerHTML = '<form id="open"><p>BLK:<input id="blk" type="text" name="blk" value="../../maps/GoldenrodCity.blk" autocomplete="on"><br/>Tileset:<input id="tileset" type="text" name="tileset" maxlength="2" value="2" autocomplete="off"><br/>Width:<input id="width" type="text" name="width" maxlength="2" value="20" autocomplete="off"><br/>Height:<input id="height" type="text" name="height" maxlength="2" value="18" autocomplete="off"><br/><input id="submit" name="submit" type="submit" value="open"></p></form><form id="close"><input id="close" name="close" type="submit" value="OK"></form>';
 			openDialog.className = 'dialog';
-			console.log('oi sup');
 			document.body.appendChild(openDialog);
 			document.forms['open'].onsubmit = function(e) {
 				e.preventDefault();
@@ -150,10 +138,6 @@ var Controller = function() {
 
 				controller.painters[id] = new Painter(getCustomMap(id, document.forms['open']['width'].value, document.forms['open']['height'].value, document.forms['open']['tileset'].value, document.forms['open']['blk'].value));
 				controller.picker = new Picker(getCustomMap(id, document.forms['open']['width'].value, document.forms['open']['height'].value, document.forms['open']['tileset'].value, document.forms['open']['blk'].value));
-				controller.pickerView.innerHTML = '';
-				controller.pickerView.appendChild(controller.picker.map.canvas);
-
-				controller.painters[id].map.draw();
 				return false;
 			};
 			document.forms['close'].onsubmit = function(e) {
@@ -200,20 +184,19 @@ var Controller = function() {
 }
 
 var Picker = function(pmap) {
-	this.tileset = pmap.tileset;
-	this.map = new Map('pickerc', pmap.group, pmap.num, pmap.width, pmap.height, pmap.tileset_id, pmap.blockfile);
-	this.map.blockdata = '';
-	for (i=0; i<(this.map.tileset.metatiles.length); i++) {
-		this.map.blockdata += String.fromCharCode(i);
+	var selfK = this;
+
+	var blockdata = '';
+	for (i=0; i<(pmap.tileset.metatiles.length); i++) {
+		blockdata += String.fromCharCode(i);
 	}
-	this.map.width = this.map.blockdata.length;
-	this.map.height = 1;
-	
-	this.map.canvas.width = this.map.width * this.map.tileset.metaw * this.map.tileset.tilew;
-	this.map.canvas.height = this.map.height * this.map.tileset.metah * this.map.tileset.tileh;
-	
-	this.map.canvas.onclick = function(e) {
-		var selfK = controller.picker;
+	var w = blockdata.length;
+	var h = 1;
+
+	selfK.map = new Map('pickerc', pmap.group, pmap.num, w, h, pmap.tileset_id);
+	selfK.map.blockdata = blockdata;
+
+	selfK.map.canvas.onclick = function(e) {
 		var pickx = Math.floor(
 			(e.pageX - selfK.map.canvas.getBoundingClientRect().left - window.scrollX)/(selfK.map.tileset.tilew*selfK.map.tileset.metaw),
 			selfK.map.tileset.tilew
@@ -224,9 +207,10 @@ var Picker = function(pmap) {
 		);
 		document.forms['ptile']['ptilei'].value = picky*selfK.map.width + pickx;
 		updatePaintTile(document.forms['ptile']['ptilei'].value);
-	}
-	
-	this.map.draw();
+	};
+
+	controller.pickerView.innerHTML = '';
+	controller.pickerView.appendChild(selfK.map.canvas);
 }
 
 var Painter = function(pmap) {
@@ -403,7 +387,14 @@ var Map = function(id, group, num, width, height, tileset_id, blockfile) {
 	} else {
 		this.tileset_id = tileset_id || 1;
 	}
+
 	this.tileset   = new Tileset(this.tileset_id);
+	var selfM = this;
+	selfM.tileset.img.onload = function() {
+		selfM.tileset.getTileData();
+		selfM.draw();
+	}
+
 	this.highlight = new Tileset(this.tileset_id, 255);
 	
 	this.width  = width  || map_names[this.group][this.num]['header_old']['second_map_header']['width'];
@@ -429,20 +420,22 @@ var Map = function(id, group, num, width, height, tileset_id, blockfile) {
 };
 
 Map.prototype.draw = function() {
-	for (y=0; y<this.height; y++) {
-		for (x=0; x<this.width; x++) {
-			this.drawMetatile(
-				this.blockdata.charCodeAt(y*this.width+x),
-				x, y
-			);
+	if (this.tileset.img.complete) {
+		for (y=0; y<this.height; y++) {
+			for (x=0; x<this.width; x++) {
+				this.drawMetatile(
+					this.blockdata.charCodeAt(y*this.width+x),
+					x, y
+				);
+			}
 		}
 	}
 };
 
 Map.prototype.drawMetatile = function(id, tx, ty, tset) {
-	tset = tset || this.tileset;
-	pw = tset.metaw*tset.tilew*tx;
-	ph = tset.metah*tset.tileh*ty;
+	var tset = tset || this.tileset;
+	var pw = tset.metaw*tset.tilew*tx;
+	var ph = tset.metah*tset.tileh*ty;
 	for (dy=0; dy<tset.metah; dy++) {
 		for (dx=0; dx<tset.metaw; dx++) {
 			cur_tile = tset.metatiles[id][dy*tset.metaw+dx];
@@ -489,15 +482,19 @@ var Tileset = function(id, alpha, tilew, tileh, metaw, metah, collw, collh) {
 	this.collision  = [];
 	
 	this.palettemap = [];
+
+	this.getPalettes();
+	this.getPaletteMap();
+	this.getMetatiles();
 	
 	this.img        = new Image();
 	this.img.src    = tiles_dir + this.id.toString().zfill(2) + '.png';
-	
-	this.getPalettes();
-	this.getPaletteMap();
-	this.getTileData();
-	this.getMetatiles();
-	
+
+	var selfT = this;
+	this.img.onload = function() {
+		selfT.getTileData();
+	};
+
 	return this;
 };
 
