@@ -128,7 +128,7 @@ var Controller = function() {
 		if (!document.getElementById('opendialog')) {
 			var openDialog = document.createElement('div');
 			openDialog.id = 'opendialog';
-			openDialog.innerHTML = '<form id="open"><p>BLK:<input id="blk" type="text" name="blk" value="" autocomplete="on"><br/>Tileset:<input id="tileset" type="text" name="tileset" value="1" autocomplete="off"><br/>Width:<input id="width" type="text" name="width" value="4" autocomplete="off"><br/>Height:<input id="height" type="text" name="height"  value="4" autocomplete="off"><br/><input id="submit" name="submit" type="submit" value="open"></p></form><form id="close"><input id="close" name="close" type="submit" value="OK"></form>';
+			openDialog.innerHTML = '<form id="open"><p>BLK:<input id="blk" type="text" name="blk" value="../../tilesets/01_metatiles.bin" autocomplete="on"><br/>Tileset:<input id="tileset" type="text" name="tileset" value="1" autocomplete="off"><br/>Width:<input id="width" type="text" name="width" value="4" autocomplete="off"><br/>Height:<input id="height" type="text" name="height"  value="504" autocomplete="off"><br/><input id="submit" name="submit" type="submit" value="open"></p></form><form id="close"><input id="close" name="close" type="submit" value="OK"></form>';
 			openDialog.className = 'dialog';
 			document.body.appendChild(openDialog);
 			document.forms['open'].onsubmit = function(e) {
@@ -424,10 +424,17 @@ Map.prototype.draw = function() {
 	if (this.tileset.img.complete) {
 		for (y=0; y<this.height; y++) {
 			for (x=0; x<this.width; x++) {
-				this.drawMetatile(
-					this.blockdata.charCodeAt(y*this.width+x),
-					x, y
-				);
+				try {
+					this.drawMetatile(
+						this.blockdata.charCodeAt(y*this.width+x),
+						x, y
+					);
+				} catch(e) {
+					this.drawMetatile(
+						0,
+						x, y
+					);
+				}
 			}
 		}
 	}
