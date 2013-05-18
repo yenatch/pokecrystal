@@ -85,7 +85,7 @@ function newblk(path) {
 
 function newmap(w,h) {
 	w = w || 4;
-	h = h || 4;
+	h = h || 4*256;
 	var id = 0; //controller.painters.length || 0;
 	controller.painters[id] = new Painter(getCustomMap(id, w, h));
 	controller.picker = (new Picker(getCustomMap(id, w, h)));
@@ -128,7 +128,7 @@ var Controller = function() {
 		if (!document.getElementById('opendialog')) {
 			var openDialog = document.createElement('div');
 			openDialog.id = 'opendialog';
-			openDialog.innerHTML = '<form id="open"><p>BLK:<input id="blk" type="text" name="blk" value="../../maps/GoldenrodCity.blk" autocomplete="on"><br/>Tileset:<input id="tileset" type="text" name="tileset" maxlength="2" value="2" autocomplete="off"><br/>Width:<input id="width" type="text" name="width" maxlength="2" value="20" autocomplete="off"><br/>Height:<input id="height" type="text" name="height" maxlength="2" value="18" autocomplete="off"><br/><input id="submit" name="submit" type="submit" value="open"></p></form><form id="close"><input id="close" name="close" type="submit" value="OK"></form>';
+			openDialog.innerHTML = '<form id="open"><p>BLK:<input id="blk" type="text" name="blk" value="" autocomplete="on"><br/>Tileset:<input id="tileset" type="text" name="tileset" maxlength="2" value="1" autocomplete="off"><br/>Width:<input id="width" type="text" name="width" maxlength="2" value="4" autocomplete="off"><br/>Height:<input id="height" type="text" name="height" maxlength="2" value="4" autocomplete="off"><br/><input id="submit" name="submit" type="submit" value="open"></p></form><form id="close"><input id="close" name="close" type="submit" value="OK"></form>';
 			openDialog.className = 'dialog';
 			document.body.appendChild(openDialog);
 			document.forms['open'].onsubmit = function(e) {
@@ -178,6 +178,7 @@ var Controller = function() {
 	
 	this.window = document.createElement('div');
 	this.window.id = 'window';
+	this.window.style.height = window.innerHeight - 80 + 'px';
 	document.body.appendChild(this.window);
 	
 	return this;
