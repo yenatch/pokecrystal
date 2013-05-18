@@ -24,7 +24,7 @@ function tileset(tileset_id) {
 }
 
 function resize(width, height, filler_tile) {
-	filler_tile = (filler_tile || 1) | 0;
+	filler_tile = (filler_tile || 6) | 0;
 
 	var last_width = controller.painters[0].map.width;
 	var last_height = controller.painters[0].map.height;
@@ -190,8 +190,8 @@ var Picker = function(pmap) {
 	for (i=0; i<(pmap.tileset.metatiles.length); i++) {
 		blockdata += String.fromCharCode(i);
 	}
-	var w = blockdata.length;
-	var h = 1;
+	var h = 4;
+	var w = blockdata.length / h;
 
 	selfK.map = new Map('pickerc', pmap.group, pmap.num, w, h, pmap.tileset_id);
 	selfK.map.blockdata = blockdata;
@@ -462,7 +462,7 @@ Map.prototype.getBlockData = function() {
 Map.prototype.newBlockData = function() {
 	this.blockdata = '';
 	for (i=0; i<this.width*this.height; i++) {
-		this.blockdata += String.fromCharCode(1|0);
+		this.blockdata += String.fromCharCode(6|0);
 	}
 }
 
