@@ -84,8 +84,8 @@ function newblk(path) {
 }
 
 function newmap(w,h) {
-	w = w || 20;
-	h = h || 20;
+	w = w || 4;
+	h = h || 4;
 	var id = 0; //controller.painters.length || 0;
 	controller.painters[id] = new Painter(getCustomMap(id, w, h));
 	controller.picker = (new Picker(getCustomMap(id, w, h)));
@@ -473,8 +473,8 @@ var Tileset = function(id, alpha, tilew, tileh, metaw, metah, collw, collh) {
 	this.tileh      = tileh || 8;
 	this.alpha      = alpha || 192;
 	
-	this.metaw      = metaw || 4;
-	this.metah      = metah || 4;
+	this.metaw      = metaw || 1;
+	this.metah      = metah || 1;
 	this.tiles      = [];
 	
 	this.collw      = collw || 2;
@@ -546,8 +546,11 @@ Tileset.prototype.getTileData = function() {
 
 Tileset.prototype.getMetatiles = function() {
 	this.metatiles = [];
-	var metatiles = getBinaryFile(metatiles_dir+this.id.toString().zfill(2) +  '_metatiles.bin');
-	
+	//var metatiles = getBinaryFile(metatiles_dir+this.id.toString().zfill(2) +  '_metatiles.bin');
+	var metatiles = '';
+	for (i=0; i<(224); i++) {
+		metatiles += String.fromCharCode(i);
+	}
 	for (metatile=0;metatile*this.metaw*this.metah<metatiles.length;metatile++) {
 		cur_metatile = new Uint8Array(this.metaw*this.metah);
 		tilestart = metatile*this.metaw*this.metah;
