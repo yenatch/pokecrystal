@@ -10,7 +10,7 @@ palette_map_dir = '../../tilesets/';
 // console tools
 function fill(tile_id) {
 	controller.painters[0].map.blockdata = '';
-	for (i=0; i<controller.painters[0].map.width*controller.painters[0].map.height; i++) {
+	for (var i=0; i<controller.painters[0].map.width*controller.painters[0].map.height; i++) {
 		controller.painters[0].map.blockdata += String.fromCharCode(tile_id|0);
 	}
 	controller.painters[0].map.draw();
@@ -34,22 +34,22 @@ function resize(width, height, filler_tile) {
 
 	if (last_width < width) {
 		// append filler tiles to each row
-		rows = []
-		for (row=0;row<last_height;row++) {
-			rows.push(blk.substr(last_width*row, last_width));
+		var rows = []
+		for (var row = 0; row < last_height; row++) {
+			rows.push(blk.substr(last_width * row, last_width));
 		}
 		blk = ''
-		for (r=0;r<rows.length;r++) {
-			for (i=0;i<(width-last_width);i++) {
+		for (var r = 0; r < rows.length; r++) {
+			for (var i = 0; i < (width - last_width); i++) {
 				rows[r] += String.fromCharCode(filler_tile);
 			}
 			blk += rows[r]
 		}
 	} else if (last_width > width) {
 		// remove tiles from each row
-		rows = []
-		for (row=0;row<last_height;row++) {
-			rows.push(blk.substr(last_width*row, width));
+		var rows = []
+		for (var row = 0; row < last_height; row++) {
+			rows.push(blk.substr(last_width * row, width));
 		}
 		blk = ''
 		for (r=0;r<rows.length;r++) {
@@ -59,14 +59,14 @@ function resize(width, height, filler_tile) {
 
 	if (last_height < height) {
 		// append filler rows to the bottom
-		for (row=0;row<(height-last_height);row++) {
-			for (i=0;i<width;i++) {
+		for (var row = 0; row < (height - last_height); row++) {
+			for (var i=0; i < width; i++) {
 				blk += String.fromCharCode(filler_tile);
 			}
 		}
 	} else if (last_height > height) {
 		// remove rows from the bottom
-		blk = blk.substr(0,width*height);
+		blk = blk.substr(0, width * height);
 	}
 
 	controller.painters[0] = new Painter(getCustomMap(controller.painters[0].map.id, width, height, controller.painters[0].map.tileset_id));
@@ -83,7 +83,7 @@ function newblk(path) {
 	controller.painters[id].map.draw();
 }
 
-function newmap(w,h) {
+function newmap(w, h) {
 	w = w || 20;
 	h = h || 20;
 	var id = 0; //controller.painters.length || 0;
@@ -104,7 +104,7 @@ function init() {
 }
 
 function updatePaintTile(painttile) {
-	for (i=0; i < controller.painters.length; i++) {
+	for (var i = 0; i < controller.painters.length; i++) {
 		controller.painters[i].paint_tile = painttile || 0;
 	}
 }
@@ -128,7 +128,50 @@ var Controller = function() {
 		if (!document.getElementById('opendialog')) {
 			var openDialog = document.createElement('div');
 			openDialog.id = 'opendialog';
-			openDialog.innerHTML = '<form id="open"><p>BLK:<input id="blk" type="text" name="blk" value="../../maps/GoldenrodCity.blk" autocomplete="on"><br/>Tileset:<input id="tileset" type="text" name="tileset" maxlength="2" value="2" autocomplete="off"><br/>Width:<input id="width" type="text" name="width" maxlength="2" value="20" autocomplete="off"><br/>Height:<input id="height" type="text" name="height" maxlength="2" value="18" autocomplete="off"><br/><input id="submit" name="submit" type="submit" value="open"></p></form><form id="close"><input id="close" name="close" type="submit" value="OK"></form>';
+
+			var openForm = document.createElement('form');
+			openForm.id = 'open';
+			
+			function HTMLAttributes(attrs) {
+				attrs = attrs || {};
+				var str = '';
+				for (attr in attrs) {
+					str += ' ' + attr + '=' + attrs[attr];
+				}
+				return str;
+			}
+			var blk = '<input' + HTMLAttributes({
+				id: 'blk',
+				value: '../../maps/GoldenrodCity.blk',
+				autocomplete: 'on'
+			}) + '>';
+			var tileset = '<input' + HTMLAttributes({
+				id: 'tileset',
+				value: '2'
+			}) + '>';
+			var width = '<input' + HTMLAttributes({
+				id: 'width',
+				value: '20'
+			}) + '>';
+			var height = '<input' + HTMLAttributes({
+				id: 'height',
+				value: '18'
+			}) + '>';
+
+			openForm.innerHTML = '\
+				BLK:'     + blk     + '<br>\
+				Tileset:' + tileset + '<br>\
+				Width:'   + width   + '<br>\
+				Height:'  + height  + '<br>\
+				<input id="open" name="open" type="submit" value="Open">\
+			';
+
+			var closeForm = document.createElement('form');
+			closeForm.id = 'close';
+			closeForm.innerHTML = '<input id="close" name="close" type="submit" value="OK">';
+			
+			openDialog.innerHTML = openForm.outerHTML + closeForm.outerHTML;
+				
 			openDialog.className = 'dialog';
 			document.body.appendChild(openDialog);
 			document.forms['open'].onsubmit = function(e) {
@@ -421,8 +464,8 @@ var Map = function(id, group, num, width, height, tileset_id, blockfile) {
 
 Map.prototype.draw = function() {
 	if (this.tileset.img.complete) {
-		for (y=0; y<this.height; y++) {
-			for (x=0; x<this.width; x++) {
+		for (var y=0; y < this.height; y++) {
+			for (var x=0; x < this.width; x++) {
 				this.drawMetatile(
 					this.blockdata.charCodeAt(y*this.width+x),
 					x, y
@@ -434,20 +477,28 @@ Map.prototype.draw = function() {
 
 Map.prototype.drawMetatile = function(id, tx, ty, tset) {
 	var tset = tset || this.tileset;
-	var pw = tset.metaw*tset.tilew*tx;
-	var ph = tset.metah*tset.tileh*ty;
-	for (dy=0; dy<tset.metah; dy++) {
-		for (dx=0; dx<tset.metaw; dx++) {
+	var pw = tset.metaw * tset.tilew * tx;
+	var ph = tset.metah * tset.tileh * ty;
+	var cur_tile = 0;
+	for (var dy=0; dy < tset.metah; dy++) {
+		for (var dx=0; dx < tset.metaw; dx++) {
 			cur_tile = tset.metatiles[id][dy*tset.metaw+dx];
+			
 			// Tile gfx are split in half to make VRAM mapping easier.
-			cur_tile = cur_tile >= 0xa0 ? cur_tile - 0x20 : cur_tile;
-			this.context.putImageData((tset.tiles[cur_tile][1]), pw+dx*tset.tilew, ph+dy*tset.tileh);
+			if (cur_tile >= 0xa0) {
+				cur_tile -= 0x20;
+			}
+			this.context.putImageData(
+				tset.tiles[cur_tile][1],
+				pw + dx * tset.tilew,
+				ph + dy * tset.tileh
+			);
 		}
 	}
 }
 
 Map.prototype.getBlockData = function() {
-	filename = this.blockfile ||
+	var filename = this.blockfile ||
 		blockdata_dir+
 		(map_names[this.group][this.num]['label']||map_names[this.group][this.num]['name'])
 		.replace(/\s+/g, '')
@@ -461,7 +512,7 @@ Map.prototype.getBlockData = function() {
 
 Map.prototype.newBlockData = function() {
 	this.blockdata = '';
-	for (i=0; i<this.width*this.height; i++) {
+	for (var i = 0; i < this.width * this.height; i++) {
 		this.blockdata += String.fromCharCode(1|0);
 	}
 }
@@ -500,12 +551,12 @@ var Tileset = function(id, alpha, tilew, tileh, metaw, metah, collw, collh) {
 
 Tileset.prototype.getTileData = function() {
 	var imageData = getRawImage(this.img);
-	
-	for (tile=0; tile<(imageData.width*imageData.height)/(this.tilew*this.tileh); tile++) {
+	var num_tiles = (imageData.width * imageData.height) / (this.tilew * this.tileh);
+	for (var tile = 0; tile < num_tiles; tile++) {
 		this.tiles[tile] = [];
 		
 		// Palette maps are padded to make vram mapping easier.
-		pal = this.palettemap[tile>=0x60?tile+0x20:tile]&0x7;
+		var pal = this.palettemap[tile>=0x60?tile+0x20:tile]&0x7;
 		
 		// An imageData object is formatted with nested pixel data...
 		this.tiles[tile][0] = [];
@@ -520,7 +571,7 @@ Tileset.prototype.getTileData = function() {
 		}
 		
 		// ...but we want flattened data.
-		tileData = getImageTemplate(this.tilew, this.tileh);
+		var tileData = getImageTemplate(this.tilew, this.tileh);
 		for (i=0; i < this.tiles[tile][0].length; i++) {
 			px = i*4;
 			
@@ -548,10 +599,10 @@ Tileset.prototype.getMetatiles = function() {
 	this.metatiles = [];
 	var metatiles = getBinaryFile(metatiles_dir+this.id.toString().zfill(2) +  '_metatiles.bin');
 	
-	for (metatile=0;metatile*this.metaw*this.metah<metatiles.length;metatile++) {
-		cur_metatile = new Uint8Array(this.metaw*this.metah);
-		tilestart = metatile*this.metaw*this.metah;
-		for (i=0;i<cur_metatile.length;i++) {
+	for (var metatile=0; metatile * this.metaw * this.metah < metatiles.length; metatile++) {
+		var cur_metatile = new Uint8Array(this.metaw * this.metah);
+		var tilestart = metatile * this.metaw * this.metah;
+		for (var i = 0; i < cur_metatile.length; i++) {
 			cur_metatile[i] = metatiles.charCodeAt(tilestart+i|0);
 		}
 		this.metatiles.push(cur_metatile);
@@ -562,7 +613,7 @@ Tileset.prototype.getCollision = function() {
 	this.collision = [];
 	var coll = getBinaryFile(collision_dir+this.id.toString().zfill(2) + '_collision.bin');
 	
-	for (i=0;i<coll.length;i++) {
+	for (var i=0; i < coll.length; i++) {
 		this.collision.push(coll.charCodeAt(i));
 	}
 }
@@ -571,8 +622,8 @@ Tileset.prototype.getPaletteMap = function() {
 	this.palettemap = [];
 	var palmap = getBinaryFile(palette_map_dir+(this.id).toString().zfill(2) + '_palette_map.bin');
 
-	for (i=0;i<palmap.length;i++) {
-		b = palmap.charCodeAt(i) & 0xff;
+	for (var i=0; i < palmap.length; i++) {
+		var b = palmap.charCodeAt(i) & 0xff;
 		
 		this.palettemap.push(b & 0xf);
 		this.palettemap.push(b >>> 4);
@@ -583,10 +634,11 @@ Tileset.prototype.getPalettes = function() {
 	// Todo: roof palettes
 	this.palettes = [];
 	var pals = getBinaryFile(palette_dir+'day.pal');
+	var palette_length = 4;
 	
-	for (i=0;i<pals.length/8;i+=1) {
+	for (var i=0; i < pals.length / 8; i+=1) {
 		this.palettes[i] = [];
-		for (j=0;j<4;j++) {
+		for (var j = 0; j < palette_length; j++) {
 			var color = (pals.charCodeAt(i*8+j*2)&0xff) + ((pals.charCodeAt(i*8+j*2+1)<<8)&0xff00);
 			this.palettes[i][j] = [
 				(color >>> 0)  & 0x1f,
@@ -601,7 +653,7 @@ Tileset.prototype.getPalettes = function() {
 // image handling
 
 function getPixel(img, x, y) {
-	i = (x + y*img.width) * 4;
+	var i = (x + y * img.width) * 4;
 	return [
 		img.data[i  ]|0,
 		img.data[i+1]|0,
@@ -611,7 +663,7 @@ function getPixel(img, x, y) {
 }
 
 function setPixel(img, x, y, pixel) {
-	i = (x + y*img.width) * 4;
+	var i = (x + y * img.width) * 4;
 	img.data[i  ] = pixel[0]|0;
 	img.data[i+1] = pixel[1]|0;
 	img.data[i+2] = pixel[2]|0;
@@ -650,7 +702,7 @@ function addCanvas(id, width, height) {
 }
 
 
-// binary handling
+// Binary file handling uses XHR.
 
 function getXHR() {
 	var xhr;
@@ -673,7 +725,7 @@ function getBinaryFile(url, callback) {
 	xhr.open("GET", url, !!callback);
 	xhr.overrideMimeType("text/plain; charset=x-user-defined");
 	if (callback) {
-		xhr.onload = function(){callback(xhr, true)};
+		xhr.onload  = function(){callback(xhr, true)};
 		xhr.onerror = function(){callback(xhr, false)};
 	}
 	xhr.send();
