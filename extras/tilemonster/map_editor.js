@@ -10,6 +10,32 @@ var palette_map_dir = tld + 'tilesets/';
 var asm_dir         = tld + 'maps/';
 
 
+function constants(asm) {
+	var consts = {};
+	var lines = asm.split('\n');
+	for (var l = 0; l < lines.length; l++) {
+		var line = separateComment(lines[l])[0];
+		if (line.indexOf('EQU') !== -1) {
+			var con = line.split('EQU')[0].trim();
+			var val = line.split('EQU')[1].trim();
+			consts[con] = parseInt(val.replace('$','0x'));
+			if (consts[con] === NaN) {
+				consts[con] = consts[val];
+			}
+		}
+	}
+	return consts;
+}
+
+function getMapConstant(con) {
+	var val = map_constants[con];
+	if (val === undefined) return con;
+	return val;
+}
+
+var map_constants = constants(loadTextFile(tld + 'constants/map_constants.asm'));
+
+
 
 function main() {
 	init();
@@ -37,10 +63,10 @@ function secondMapHeader(asm, mapName) {
 		'height',
 		'width',
 		'blockdata_bank',
-		'blockdata',
+		'blockdata_label',
 		'script_header_bank',
-		'script_header',
-		'map_event_header',
+		'script_header_label',
+		'map_event_header_label',
 		'connections',
 	];
 	var i = 0;
@@ -111,7 +137,7 @@ function mapHeader(asm, mapName) {
 	var items = [];
 	var attributes = [
 		'bank',
-		'tileset',
+		'tileset_id',
 		'permission',
 		'second_map_header',
 		'world_map_location',
@@ -236,7 +262,7 @@ function fill(tile_id) {
 
 function tileset(tileset_id) {
 	var old_blk = controller.painters[0].map.blockdata;
-	controller.painters[0] = new Painter(getCustomMap(controller.painters[0].map.id, controller.painters[0].map.width, controller.painters[0].map.height, tileset_id));
+	controller.painters[0] = new Painter(getCustomMap(controller.painters[0].map.id, controller.painters[0].map.name, controller.painters[0].map.width, controller.painters[0].map.height, tileset_id));
 	controller.painters[0].map.blockdata = old_blk;
 	controller.picker = new Picker(controller.painters[0].map);
 }
@@ -287,7 +313,7 @@ function resize(width, height, filler_tile) {
 		blk = blk.substr(0, width * height);
 	}
 
-	controller.painters[0] = new Painter(getCustomMap(controller.painters[0].map.id, width, height, controller.painters[0].map.tileset_id));
+	controller.painters[0] = new Painter(getCustomMap(controller.painters[0].map.id, controller.painters[0].map.name, width, height, controller.painters[0].map.tileset_id));
 	controller.painters[0].map.blockdata = blk;
 	controller.painters[0].map.draw();
 }
@@ -297,16 +323,16 @@ function newblk(path) {
 	var w = controller.painters[id].map.width;
 	var h = controller.painters[id].map.height;
 	var t = controller.painters[id].map.tileset_id;
-	controller.painters[id] = new Painter(getCustomMap(id, w, h, t, path));
+	controller.painters[id] = new Painter(getCustomMap(id, undefined, w, h, t, path));
 	controller.painters[id].map.draw();
 }
 
-function newmap(w, h) {
+function newmap(w, h, name) {
+	var id = 0;
 	w = w || 20;
 	h = h || 20;
-	var id = 0; //controller.painters.length || 0;
-	controller.painters[id] = new Painter(getCustomMap(id, w, h));
-	controller.picker = (new Picker(getCustomMap(id, w, h)));
+	controller.painters[id] = new Painter(getCustomMap(id, undefined, w, h));
+	controller.picker = new Picker(controller.painters[id].map);
 }
 
 
@@ -370,13 +396,11 @@ var Controller = function() {
 				value: '18'
 			}) + '>';
 
-			openForm.innerHTML = '\
-				BLK:'     + blk     + '<br>\
-				Tileset:' + tileset + '<br>\
-				Width:'   + width   + '<br>\
-				Height:'  + height  + '<br>\
-				<input id="open" name="open" type="submit" value="Open">\
-			';
+			var nameInput = '<input' + HTMLAttributes({
+				id: 'name',
+				value: '"Goldenrod City"'
+			}) + '>';
+			openForm.innerHTML = 'Name: ' + nameInput + ' <input id="open" name="open" type="submit" value="Open">';
 
 			var closeForm = document.createElement('form');
 			closeForm.id = 'close';
@@ -388,11 +412,16 @@ var Controller = function() {
 			document.body.appendChild(openDialog);
 			document.forms['open'].onsubmit = function(e) {
 				e.preventDefault();
-				console.log('opened', document.forms['open']['blk'].value);
-				var id = 0; //selfC.painters.length || 0;
 
-				selfC.painters[id] = new Painter(getCustomMap(id, document.forms['open']['width'].value, document.forms['open']['height'].value, document.forms['open']['tileset'].value, document.forms['open']['blk'].value));
-				selfC.picker = new Picker(getCustomMap(id, document.forms['open']['width'].value, document.forms['open']['height'].value, document.forms['open']['tileset'].value, document.forms['open']['blk'].value));
+				var name = document.forms['open']['name'].value;
+				name = name.capWords().replace(/\ /g, '');
+				console.log('opened', name);
+
+				var id = 0; //selfC.painters.length || 0;
+				selfC.painters[id] = new Painter(getMapById(name));
+				selfC.picker = new Picker(selfC.painters[id].map);
+
+				document.body.removeChild(document.getElementById('opendialog'));
 				return false;
 			};
 			document.forms['close'].onsubmit = function(e) {
@@ -448,7 +477,7 @@ var Picker = function(pmap) {
 	var w = blockdata.length;
 	var h = 1;
 
-	selfK.map = new Map('pickerc', pmap.group, pmap.num, w, h, pmap.tileset_id);
+	selfK.map = getCustomMap('pickerc', undefined, w, h, pmap.tileset_id);
 	selfK.map.blockdata = blockdata;
 
 	selfK.map.canvas.onclick = function(e) {
@@ -621,38 +650,56 @@ var Painter = function(pmap) {
 */
 
 
-function getMapById(id, group, num) {
-	return new Map(id, group, num);
+function getMapById(name) {
+	return new Map(undefined, name);
 }
 
-function getCustomMap(id, width, height, tileset_id, blockfile) {
-	return new Map(id, undefined, undefined, width, height, tileset_id, blockfile);
+function getCustomMap(id, name, width, height, tileset_id) {
+	return new Map(id, name, width, height, tileset_id);
 }
 
-var Map = function(id, group, num, width, height, tileset_id, blockfile) {
-	this.id    = id || 0;
-	this.group = group;
-	this.num   = num;
+function getPickerMap(id, tileset_id) {
+	return new Map(id, undefined, undefined, undefined, tileset_id);
+}
 
-	if (this.group !== undefined || this.num !== undefined) {
-		this.tileset_id = tileset_id || map_names[this.group][this.num]['header_old']['tileset'];
-	} else {
-		this.tileset_id = tileset_id || 1;
+var Map = function(id, name, width, height, tileset_id, blockfile) {
+	var selfM = this;
+
+	this.id = id;
+	this.name = name;
+
+	if (this.name) {
+		var props = [mapHeader(mapHeaders, this.name), secondMapHeader(secondMapHeaders, this.name)];
+		for (var i = 0; i < props.length; i++) {
+			for (prop in props[i]) {
+				this[prop] = props[i][prop];
+			}
+		}
+		this.asm     = loadTextFile(asm_dir + this.name + '.asm');
+		this.events  = eventHeader(this.asm, this.name);
+		this.scripts = scriptHeader(this.asm, this.name);
+
+		this.tileset_id = parseInt(this.tileset_id);
+		this.blockfile = blockdata_dir + this.name + '.blk';
+
+		this.width  = getMapConstant(this.width);
+		this.height = getMapConstant(this.height);
 	}
 
-	this.tileset   = new Tileset(this.tileset_id);
-	var selfM = this;
-	selfM.tileset.img.onload = function() {
+	if (tileset_id) this.tileset_id = tileset_id;
+	this.tileset = new Tileset(this.tileset_id);
+	this.tileset.img.onload = function() {
 		selfM.tileset.getTileData();
 		selfM.draw();
 		controller.window.style.left = '0px';
 	}
-
 	this.highlight = new Tileset(this.tileset_id, 255);
-	
-	this.width  = width  || map_names[this.group][this.num]['header_old']['second_map_header']['width'];
-	this.height = height || map_names[this.group][this.num]['header_old']['second_map_header']['height'];
-	
+
+	if (width)  this.width = width;
+	if (height) this.height = height;
+	this.width  = parseInt(this.width);
+	this.height = parseInt(this.height);
+
 	this.canvas  = canvas(
 		this.id,
 		this.width  * this.tileset.tilew * this.tileset.metaw,
@@ -660,10 +707,10 @@ var Map = function(id, group, num, width, height, tileset_id, blockfile) {
 	);
 	this.context = this.canvas.getContext('2d');
 	
-	this.blockfile = blockfile;
+	if (blockfile !== undefined) this.blockfile = blockfile;
 	this.blockdata = '';
 
-	if (((this.group === undefined) || (this.num === undefined)) && this.blockfile === undefined) {
+	if (this.blockfile === undefined) {
 		this.newBlockData();
 	} else {
 		this.getBlockData();
@@ -709,14 +756,13 @@ Map.prototype.drawMetatile = function(id, tx, ty, tset) {
 
 Map.prototype.getBlockData = function() {
 	var filename = this.blockfile ||
-		blockdata_dir+
-		(map_names[this.group][this.num]['label']||map_names[this.group][this.num]['name'])
+		blockdata_dir +
+		this.name
 		.replace(/\s+/g, '')
-		.replace('é','e')
-		.replace('\'','')+
+		.replace(/é/g,'e')
+		.replace(/\'/g,'') +
 		'.blk'
 	;
-	console.log(filename);
 	this.blockdata = getBinaryFile(filename);
 }
 
@@ -1024,5 +1070,11 @@ String.prototype.replaceCharCodeAt=function(index, code) {
 
 String.prototype.insertCharCodeAt=function(index, code) {
 	return this.substr(0, index) + String.fromCharCode(code) + this.substr(index);
+}
+
+String.prototype.capWords = function() {
+	return this.replace(/\w*/g, function(str) {
+		return str.charAt(0).toUpperCase() + str.substr(1);
+	});
 }
 
