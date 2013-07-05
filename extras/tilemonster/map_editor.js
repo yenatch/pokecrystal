@@ -1,10 +1,228 @@
 
-blockdata_dir   = '../../maps/';
-tiles_dir       = '../../gfx/tilesets/';
-palette_dir     = '../../tilesets/';
-metatiles_dir   = '../../tilesets/';
-collision_dir   = '../../tilesets/';
-palette_map_dir = '../../tilesets/';
+var tld = '../../';
+
+var blockdata_dir   = tld + 'maps/';
+var tiles_dir       = tld + 'gfx/tilesets/';
+var palette_dir     = tld + 'tilesets/';
+var metatiles_dir   = tld + 'tilesets/';
+var collision_dir   = tld + 'tilesets/';
+var palette_map_dir = tld + 'tilesets/';
+var asm_dir         = tld + 'maps/';
+
+
+
+function main() {
+	init();
+}
+
+function init() {
+	console.log('welcome to map editor');
+	controller = new Controller();
+	console.log('check out this rad map editor');
+}
+
+
+
+// map readers
+
+var mapHeaders = loadTextFile(asm_dir + 'map_headers.asm');
+var secondMapHeaders = loadTextFile(asm_dir + 'second_map_headers.asm');
+
+function secondMapHeader(asm, mapName) {
+	var header = asmAtLabel(asm, mapName + '_SecondMapHeader');
+	var items = [];
+	var macros = [ 'db', 'db', 'dbw', 'dbw', 'dw', 'db' ];
+	var attributes = [
+		'border_block',
+		'height',
+		'width',
+		'blockdata_bank',
+		'blockdata',
+		'script_header_bank',
+		'script_header',
+		'map_event_header',
+		'connections',
+	];
+	var i = 0;
+	for (var l = 0; l < header.length; l++) {
+		var asm     = header[l][0];
+		var comment = header[l][1];
+
+		if (asm.trim() !== '') {
+			items = items.concat(macroValues(asm, macros[i]));
+			i++;
+		}
+		if (items.length === attributes.length) {
+			l++;
+			break;
+		}
+	}
+
+	var attrs = listsToDict(attributes, items);
+	attrs['connections'] = connections(attrs['connections'], header.slice(l));
+	return attrs;
+}
+
+
+function connections(conns, header) {
+	var directions = { 'north': {}, 'south': {}, 'west': {}, 'east': {} };
+	
+	var macros = [ 'db', 'dw', 'dw', 'db', 'db', 'dw' ];
+	var attributes = [
+		'map_group',
+		'map_no',
+		'strip_pointer',
+		'strip_destination',
+		'strip_length',
+		'map_width',
+		'y_offset',
+		'x_offset',
+		'window'
+	];
+
+	for (d in directions) {
+		if (conns.search(d.toUpperCase()) !== -1) {
+			var i = 0;
+			var items = [];
+			for (var l = 0; l < header.length; l++) {
+				var asm     = header[l][0];
+				var comment = header[l][1];
+
+				if (asm.trim() !== '') {
+					items = items.concat(macroValues(asm, macros[i]));
+					i++;
+				}
+				if (items.length === attributes.length) {
+					l++;
+					break;
+				}
+			}
+			directions[d] = listsToDict(attributes, items);
+		}
+	}
+
+	return directions;
+}
+
+
+function mapHeader(asm, mapName) {
+	var header = asmAtLabel(asm, mapName + '_MapHeader');
+	var macros = [ 'db', 'dw', 'db' ];
+	var items = [];
+	var attributes = [
+		'bank',
+		'tileset',
+		'permission',
+		'second_map_header',
+		'world_map_location',
+		'music',
+		'time_of_day',
+		'fishing_group'
+	];
+	var i = 0;
+	for (var l = 0; l < header.length; l++) {
+		var asm     = header[l][0];
+		var comment = header[l][1];
+
+		if (asm.trim() !== '') {
+			items = items.concat(macroValues(asm, macros[i]));
+			i++;
+		}
+		if (items.length === attributes.length) {
+			l++;
+			break;
+		}
+	}
+	return listsToDict(attributes, items);
+}
+
+
+function scriptHeader(asm, mapName) {
+	var header = asmAtLabel(asm, mapName + '_MapScriptHeader');
+	var macros = {
+		triggers: 'dw',
+		callbacks: 'dbw'
+	};
+	var items = {
+		triggers:  [],
+		callbacks: []
+	};
+	var l = 0;
+	for (i in items) {
+		var count = -1;
+
+		while (l < header.length) {
+			var asm     = header[l][0];
+			var comment = header[l][1];
+
+			if (asm.trim() !== '') {
+
+				if (count === -1) {
+					count = parseInt(dbValue(asm));
+					if (count === 0) {
+						l++;
+						break;
+					}
+				} else if (items[i].length < count) {
+					items[i].push(macroValues(asm, macros[i]));
+				} else {
+					break;
+				}
+			}
+			l++;
+		}
+	}
+	return items;
+}
+
+
+function eventHeader(asm, mapName) {
+	var header = asmAtLabel(asm, mapName + '_MapEventHeader');
+	var items = {
+		warp_def: [],
+		xy_trigger: [],
+		signpost: [],
+		person_event: []
+	};
+	var l = 0;
+
+	// skip 2-byte filler
+	// more likely this is two items that never ended up being used
+	var filler = 2;
+	while (filler > 0) {
+		if (header[l][0].trim() !== '') {
+			filler -= dbValues(header[l][0]).length;
+		}
+		l++;
+	}
+
+	for (i in items) {
+		var count = -1;
+
+		while (l < header.length) {
+			var asm     = header[l][0];
+			var comment = header[l][1];
+
+			if (asm.trim() !== '') {
+
+				if ((count === -1) && (asm.indexOf('db') !== -1)) {
+					count = parseInt(dbValue(asm));
+					if (count === 0) {
+						l++;
+						break;
+					}
+				} else if (items[i].length < count) {
+					items[i].push(macroValues(asm, i));
+				} else {
+					break;
+				}
+			}
+			l++;
+		}
+	}
+	return items;
+}
+
 
 
 // console tools
@@ -93,15 +311,7 @@ function newmap(w, h) {
 
 
 
-function main() {
-	init();
-}
-
-function init() {
-	console.log('welcome to map editor');
-	controller = new Controller();
-	console.log('check out this rad map editor');
-}
+// ui
 
 function updatePaintTile(painttile) {
 	for (var i = 0; i < controller.painters.length; i++) {
@@ -144,7 +354,7 @@ var Controller = function() {
 			}
 			var blk = '<input' + HTMLAttributes({
 				id: 'blk',
-				value: '../../maps/GoldenrodCity.blk',
+				value: tld + 'maps/GoldenrodCity.blk',
 				autocomplete: 'on'
 			}) + '>';
 			var tileset = '<input' + HTMLAttributes({
@@ -702,7 +912,7 @@ function addCanvas(id, width, height) {
 }
 
 
-// Binary file handling uses XHR.
+// File handling uses XHR.
 
 function getXHR() {
 	var xhr;
@@ -720,16 +930,82 @@ function getXHR() {
 	return xhr;
 }
 
-function getBinaryFile(url, callback) {
+function loadTextFile(url, callback) {
 	var xhr = getXHR();
-	xhr.open("GET", url, !!callback);
-	xhr.overrideMimeType("text/plain; charset=x-user-defined");
+	xhr.open('GET', url, !!callback);
 	if (callback) {
 		xhr.onload  = function(){callback(xhr, true)};
 		xhr.onerror = function(){callback(xhr, false)};
 	}
 	xhr.send();
 	return callback ? undefined : xhr.responseText;
+}
+
+function getBinaryFile(url, callback) {
+	var xhr = getXHR();
+	xhr.open('GET', url, !!callback);
+	xhr.overrideMimeType('text/plain; charset=x-user-defined');
+	if (callback) {
+		xhr.onload  = function(){callback(xhr, true)};
+		xhr.onerror = function(){callback(xhr, false)};
+	}
+	xhr.send();
+	return callback ? undefined : xhr.responseText;
+}
+
+
+
+function listsToDict(keys, values) {
+	var dict = {};
+	for (var i = 0; i < keys.length; i++) {
+		dict[keys[i]] = values[i];
+	}
+	return dict;
+}
+
+
+// asm parsing
+
+function separateComment(line) {
+	var in_quote = false;
+	for (var i = 0; i < line.length; i++) {
+		if (!in_quote) {
+			if (line[i] === ';') {
+				return [line.substr(0,i), line.substr(i)];
+			}
+		}
+		if (line[i] === '"') in_quote = !in_quote;
+	}
+	return [line, undefined];
+}
+
+function asmAtLabel(asm, label) {
+	var start = asm.indexOf(label + ':') + (label+':').length;
+	var lines = asm.substr(start).split('\n');
+	var content = [];
+	for (var l = 0; l < lines.length; l++) {
+		var line = lines[l];
+		if (line.indexOf(':') !== -1) break;
+		content.push(separateComment(line));
+	}
+	return content;
+}
+
+
+function macroValues(asm, macro) {
+	var values = asm.substr(asm.indexOf(macro)+macro.length).split(',');
+	for (var i = 0; i < values.length; i++) {
+		values[i] = values[i].replace('$','0x').trim();
+	}
+	return values;
+}
+
+function dbValue(asm) {
+	return asm.substr(asm.indexOf('db ')+3).replace('$','0x');
+}
+
+function dbValues(asm) {
+	return macroValues(asm, 'db');
 }
 
 
