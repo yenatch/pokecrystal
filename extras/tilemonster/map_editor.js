@@ -110,6 +110,8 @@ function updatePaintTile(painttile) {
 }
 
 var Controller = function() {
+	var selfC = this;
+
 	this.painters = [];
 	
 	this.bar = document.createElement('div');
@@ -119,7 +121,7 @@ var Controller = function() {
 	this.newMapButton.innerHTML = '+';
 	this.newMapButton.onclick = function(e) {
 		var id = 0;
-		if (!controller.painters[id] || window.confirm('Overwrite existing map?')) { newmap(); }
+		if (!selfC.painters[id] || window.confirm('Overwrite existing map?')) { newmap(); }
 	};
 	
 	this.openButton = document.createElement('div');
@@ -177,10 +179,10 @@ var Controller = function() {
 			document.forms['open'].onsubmit = function(e) {
 				e.preventDefault();
 				console.log('opened', document.forms['open']['blk'].value);
-				var id = 0; //controller.painters.length || 0;
+				var id = 0; //selfC.painters.length || 0;
 
-				controller.painters[id] = new Painter(getCustomMap(id, document.forms['open']['width'].value, document.forms['open']['height'].value, document.forms['open']['tileset'].value, document.forms['open']['blk'].value));
-				controller.picker = new Picker(getCustomMap(id, document.forms['open']['width'].value, document.forms['open']['height'].value, document.forms['open']['tileset'].value, document.forms['open']['blk'].value));
+				selfC.painters[id] = new Painter(getCustomMap(id, document.forms['open']['width'].value, document.forms['open']['height'].value, document.forms['open']['tileset'].value, document.forms['open']['blk'].value));
+				selfC.picker = new Picker(getCustomMap(id, document.forms['open']['width'].value, document.forms['open']['height'].value, document.forms['open']['tileset'].value, document.forms['open']['blk'].value));
 				return false;
 			};
 			document.forms['close'].onsubmit = function(e) {
@@ -194,7 +196,7 @@ var Controller = function() {
 	this.saveButton = document.createElement('div');
 	this.saveButton.innerHTML = 's';
 	this.saveButton.onclick = function(e) {
-		var blk = controller.painters[0].map.blockdata;
+		var blk = selfC.painters[0].map.blockdata;
 		window.location.href = 'data:application/octet-stream;base64,' + window.btoa(blk);
 	};
 	
@@ -257,6 +259,8 @@ var Picker = function(pmap) {
 }
 
 var Painter = function(pmap) {
+
+	var selfP = this;
 	
 	this.map = pmap;
 	controller.window.style.width = this.map.canvas.width + 'px';
@@ -273,8 +277,7 @@ var Painter = function(pmap) {
 	this.lastx = undefined;
 	this.lasty = undefined;
 	
-	checkPaint = function(e) {
-		var selfP = controller.painters[e.target.id];
+	this.checkPaint = function(e) {
 		var blockPos = selfP.lasty*selfP.map.width+selfP.lastx;
 		if (selfP.paintx !== selfP.lastx || selfP.painty !== selfP.lasty || selfP.paint_tile !== selfP.newtile) {
 			selfP.paintx = selfP.lastx;
@@ -291,24 +294,21 @@ var Painter = function(pmap) {
 		}
 	}
 	
-	function resetPaint(e) {
-		var selfP = controller.painters[e.target.id];
-		selfP.paintint = setInterval(function(){checkPaint(e);}, 5);
+	this.resetPaint = function(e) {
+		selfP.paintint = setInterval(function(){selfP.checkPaint(e);}, 5);
 	}
 	
-	function stopPaint(e) {
-		var selfP = controller.painters[e.target.id];
+	this.stopPaint = function(e) {
 		clearInterval(selfP.paintint);
 		selfP.map.draw();
 	}
 	
-	this.map.canvas.onmousedown   = function(e) { stopPaint(e); resetPaint(e); e.preventDefault(); }
-	this.map.canvas.onmouseup     = function(e) { stopPaint(e); }
-	this.map.canvas.onmouseout    = function(e) { stopPaint(e); }
-	this.map.canvas.oncontextmenu = function(e) { stopPaint(e); }
+	this.map.canvas.onmousedown   = function(e) { selfP.stopPaint(e); selfP.resetPaint(e); e.preventDefault(); }
+	this.map.canvas.onmouseup     = function(e) { selfP.stopPaint(e); }
+	this.map.canvas.onmouseout    = function(e) { selfP.stopPaint(e); }
+	this.map.canvas.oncontextmenu = function(e) { selfP.stopPaint(e); }
 	
 	this.map.canvas.onmousemove = function(e) {
-		var selfP = controller.painters[e.target.id];
 		try {
 			selfP.map.drawMetatile(
 				selfP.map.blockdata.charCodeAt(selfP.lasty*selfP.map.width+selfP.lastx),
