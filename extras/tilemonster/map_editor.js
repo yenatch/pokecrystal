@@ -437,7 +437,7 @@ var Controller = function() {
 	this.saveButton.innerHTML = 's';
 	this.saveButton.onclick = function(e) {
 		var blk = selfC.painters[0].map.blockdata;
-		window.location.href = 'data:application/octet-stream;base64,' + window.btoa(blk);
+		saveFile(blk);
 	};
 	
 	this.pickerTileForm = document.createElement('div');
@@ -1026,6 +1026,12 @@ function getBinaryFile(url, callback) {
 	xhr.send();
 	return callback ? undefined : xhr.responseText;
 }
+
+function saveFile(data) {
+	window.location.href = 'data:application/octet-stream;base64,' + window.btoa(data);
+}
+
+
 
 function getPalettes(url) {
 	var palettes = [];
