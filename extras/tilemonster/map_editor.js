@@ -877,6 +877,8 @@ var Sprite = function(id, pic, x, y) {
 	this.pic = pic || 0;
 	this.x = x || 0;
 	this.y = y || 0;
+	this.lastx = this.x;
+	this.lasty = this.y;
 
 	this.img = new Image();
 	this.img.id = 'sprite' + this.id;
@@ -892,11 +894,17 @@ var Sprite = function(id, pic, x, y) {
 		selfS.context = selfS.canvas.getContext('2d');
 		selfS.image = flattenImageData(getRawImage(selfS.img), selfS.palette, selfS.canvas.width, selfS.canvas.height);
 		selfS.draw();
+		selfS.canvas.draggable = true;
+		selfS.canvas.ondrag = function(e) {
+			e.preventDefault();
+			var x = Math.floor((e.pageX - document.getElementById('window').getBoundingClientRect().left - window.scrollX - 8)/16) * 16;
+			var y = Math.floor((e.pageY - document.getElementById('window').getBoundingClientRect().top - window.scrollY - 8)/16) * 16;
+			selfS.x = x;
+			selfS.y = y;
+			selfS.draw();
+			return false;
+		};
 	}
-
-	this.img.ondragstart = function() {
-		
-	};
 }
 
 Sprite.prototype.draw = function() {
