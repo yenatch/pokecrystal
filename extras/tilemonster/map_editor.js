@@ -8,6 +8,7 @@ var metatiles_dir   = tld + 'tilesets/';
 var collision_dir   = tld + 'tilesets/';
 var palette_map_dir = tld + 'tilesets/';
 var asm_dir         = tld + 'maps/';
+var ow_dir          = tld + 'gfx/overworld/';
 
 
 function constants(asm) {
@@ -651,7 +652,7 @@ var Painter = function(pmap) {
 
 
 function getMapById(name) {
-	return new Map(undefined, name);
+	return new Map(0, name);
 }
 
 function getCustomMap(id, name, width, height, tileset_id) {
@@ -691,6 +692,9 @@ var Map = function(id, name, width, height, tileset_id, blockfile) {
 	this.tileset.img.onload = function() {
 		selfM.tileset.getTileData();
 		selfM.draw();
+		if (selfM.events && selfM.events.person_event) {
+			selfM.drawSprites();
+		}
 		controller.window.style.left = '0px';
 	}
 	this.highlight = new Tileset(this.tileset_id, 255);
@@ -715,7 +719,7 @@ var Map = function(id, name, width, height, tileset_id, blockfile) {
 	} else {
 		this.getBlockData();
 	}
-	
+
 	return this;
 };
 
@@ -742,11 +746,11 @@ Map.prototype.drawMetatile = function(id, tx, ty, tset) {
 			cur_tile = tset.metatiles[id][dy*tset.metaw+dx];
 			
 			// Tile gfx are split in half to make VRAM mapping easier.
-			if (cur_tile >= 0xa0) {
+			if (cur_tile >= 0x80) {
 				cur_tile -= 0x20;
 			}
 			this.context.putImageData(
-				tset.tiles[cur_tile][1],
+				tset.tiles[cur_tile],
 				pw + dx * tset.tilew,
 				ph + dy * tset.tileh
 			);
@@ -770,6 +774,14 @@ Map.prototype.newBlockData = function() {
 	this.blockdata = '';
 	for (var i = 0; i < this.width * this.height; i++) {
 		this.blockdata += String.fromCharCode(1|0);
+	}
+}
+
+Map.prototype.drawSprites = function() {
+	this.sprites = [];
+	for (var i = 0; i < this.events.person_event.length; i++) {
+		var person = this.events.person_event[i];
+		this.sprites[i] = new Sprite(i, person[0], (person[2] - 4) * 16, (person[1] - 4) * 16);
 	}
 }
 
@@ -806,48 +818,13 @@ var Tileset = function(id, alpha, tilew, tileh, metaw, metah, collw, collh) {
 };
 
 Tileset.prototype.getTileData = function() {
+	this.tiles = [];
 	var imageData = getRawImage(this.img);
 	var num_tiles = (imageData.width * imageData.height) / (this.tilew * this.tileh);
 	for (var tile = 0; tile < num_tiles; tile++) {
-		this.tiles[tile] = [];
-		
 		// Palette maps are padded to make vram mapping easier.
-		var pal = this.palettemap[tile>=0x60?tile+0x20:tile]&0x7;
-		
-		// An imageData object is formatted with nested pixel data...
-		this.tiles[tile][0] = [];
-		for (y=0; y < this.tileh; y++) {
-			for (x=0; x < this.tilew; x++) {
-				this.tiles[tile][0].push(
-					getPixel( imageData,
-					          this.tilew*(tile % (imageData.width/this.tilew)|0) + x,
-					          this.tileh*(tile / (imageData.width/this.tilew)|0) + y  )
-				);
-			}
-		}
-		
-		// ...but we want flattened data.
-		var tileData = getImageTemplate(this.tilew, this.tileh);
-		for (i=0; i < this.tiles[tile][0].length; i++) {
-			px = i*4;
-			
-			// color
-			tileData.data[px  ] = this.palettes[pal][3-this.tiles[tile][0][i][0]/85][0]*8;
-			tileData.data[px+1] = this.palettes[pal][3-this.tiles[tile][0][i][1]/85][1]*8;
-			tileData.data[px+2] = this.palettes[pal][3-this.tiles[tile][0][i][2]/85][2]*8;
-			
-			/*
-			// monochrome
-			tileData.data[px  ] = this.tiles[tile][0][i][0]|0;
-			tileData.data[px+1] = this.tiles[tile][0][i][1]|0;
-			tileData.data[px+2] = this.tiles[tile][0][i][2]|0;
-			*/
-			
-			tileData.data[px+3] = this.alpha|0;
-		}
-		
-		// Keep both for posterity.
-		this.tiles[tile][1] = tileData;
+		var pal = this.palettemap[tile >= 0x60 ? tile + 0x20 : tile] & 0x7;
+		this.tiles[tile] = flattenImageData(imageData, this.palettes[pal], this.tilew, this.tileh, this.alpha, tile);
 	}
 };
 
@@ -888,21 +865,50 @@ Tileset.prototype.getPaletteMap = function() {
 
 Tileset.prototype.getPalettes = function() {
 	// Todo: roof palettes
-	this.palettes = [];
-	var pals = getBinaryFile(palette_dir+'day.pal');
-	var palette_length = 4;
-	
-	for (var i=0; i < pals.length / 8; i+=1) {
-		this.palettes[i] = [];
-		for (var j = 0; j < palette_length; j++) {
-			var color = (pals.charCodeAt(i*8+j*2)&0xff) + ((pals.charCodeAt(i*8+j*2+1)<<8)&0xff00);
-			this.palettes[i][j] = [
-				(color >>> 0)  & 0x1f,
-				(color >>> 5)  & 0x1f,
-				(color >>> 10) & 0x1f
-			];
-		}
+	this.palettes = getPalettes(palette_dir+'day.pal');
+}
+
+
+
+var Sprite = function(id, pic, x, y) {
+	var selfS = this;
+
+	this.id = id || 0;
+	this.pic = pic || 0;
+	this.x = x || 0;
+	this.y = y || 0;
+
+	this.img = new Image();
+	this.img.id = 'sprite' + this.id;
+	this.img.src = ow_dir + parseInt(this.pic).toString().zfill(3) + '.png';
+	this.img.style.position = 'absolute';
+	this.img.style.left = this.x + 'px';
+	this.img.style.top  = this.y + 'px';
+
+	this.palette = getPalettes(ow_dir + '000.pal')[0];
+
+	this.img.onload = function() {
+		selfS.canvas = canvas('sprite' + selfS.id, selfS.img.width, selfS.img.height);
+		selfS.context = selfS.canvas.getContext('2d');
+		selfS.image = flattenImageData(getRawImage(selfS.img), selfS.palette, selfS.canvas.width, selfS.canvas.height);
+		selfS.draw();
 	}
+
+	this.img.ondragstart = function() {
+		
+	};
+}
+
+Sprite.prototype.draw = function() {
+	this.canvas.style.position = 'absolute';
+	this.canvas.style.left = this.x + 'px';
+	this.canvas.style.top  = this.y + 'px';
+	if (!document.getElementById(this.canvas.id)) {
+		document.getElementById('window').appendChild(this.canvas);
+	}
+	this.context.putImageData(
+		eraseWhite(this.image), 0, 0
+	);
 }
 
 
@@ -997,6 +1003,70 @@ function getBinaryFile(url, callback) {
 	}
 	xhr.send();
 	return callback ? undefined : xhr.responseText;
+}
+
+function getPalettes(url) {
+	var palettes = [];
+	var pals = getBinaryFile(url);
+	var num_colors = 4;
+	var color_length = 2;
+	var palette_length = num_colors * color_length;
+	var num_pals = pals.length / palette_length;
+
+	for (var p = 0; p < num_pals; p++) {
+		palettes[p] = [];
+		for (var c = 0; c < num_colors; c++) {
+			var color = (
+				(pals.charCodeAt(p * palette_length + c * color_length + 0) & 0xff) +
+				((pals.charCodeAt(p * palette_length + c * color_length + 1) & 0xff) << 8)
+			);
+			palettes[p][c] = [
+				(color >>> 0)  & 0x1f,
+				(color >>> 5)  & 0x1f,
+				(color >>> 10) & 0x1f
+			];
+		}
+	}
+
+	return palettes;
+}
+
+function flattenImageData(imageData, palette, width, height, alpha, tile) {
+	// An imageData object is formatted with nested
+	// pixel data, but we want flattened data.
+	alpha = alpha || 255;
+	tile = tile || 0;
+	var image = getImageTemplate(width, height);
+	for (var y = 0; y < height; y++) {
+		for (var x = 0; x < width; x++) {
+			var p = getPixel(
+				imageData,
+				width  * (tile % (imageData.width / width) | 0) + x,
+				height * (tile / (imageData.width / width) | 0) + y
+			);
+			var i = (y * width + x) * 4;
+			image.data[i+0] = palette[3 - p[0] / 85][0] * 8;
+			image.data[i+1] = palette[3 - p[1] / 85][1] * 8;
+			image.data[i+2] = palette[3 - p[2] / 85][2] * 8;
+			image.data[i+3] = alpha | 0;
+		}
+	}
+	return image;
+}
+
+function eraseWhite(image) {
+	// Sprites use a certain shade of white for transparency.
+	for (var i = 0; i < image.data.length / 4; i++) {
+		var px = i * 4;
+		if (
+			image.data[px+0] === 216 &&
+			image.data[px+1] === 248 &&
+			image.data[px+2] === 216
+		) {
+			image.data[px+3] = 0 | 0;
+		}
+	}
+	return image;
 }
 
 
