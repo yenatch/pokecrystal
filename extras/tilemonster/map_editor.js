@@ -897,10 +897,24 @@ var Sprite = function(id, pic, x, y) {
 		selfS.canvas.draggable = true;
 		selfS.canvas.ondrag = function(e) {
 			e.preventDefault();
-			var x = Math.floor((e.pageX - document.getElementById('window').getBoundingClientRect().left - window.scrollX - 8)/16) * 16;
-			var y = Math.floor((e.pageY - document.getElementById('window').getBoundingClientRect().top - window.scrollY - 8)/16) * 16;
+			var rect = document.getElementById('window').getBoundingClientRect();
+			var x = e.pageX - rect.left - window.scrollX - 8;
+			var y = e.pageY - rect.top - window.scrollY - 8;
+			if (x >= rect.width) {
+				x = rect.width - selfS.canvas.width;
+			} else if (x < 0) {
+				x = 0;
+			}
+			if (y >= rect.height) {
+				y = rect.height - selfS.canvas.height;
+			} else if (y < 0) {
+				y = 0;
+			}
+			x = Math.floor(x / selfS.canvas.width) * selfS.canvas.width;
+			y = Math.floor(y / selfS.canvas.height) * selfS.canvas.height;
 			selfS.x = x;
 			selfS.y = y;
+			console.log(selfS.x, selfS.y);
 			selfS.draw();
 			return false;
 		};
