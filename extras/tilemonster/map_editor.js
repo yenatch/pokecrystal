@@ -164,34 +164,25 @@ function mapHeader(asm, mapName) {
 }
 
 
-function scriptHeader(asm, mapName) {
-	var header = asmAtLabel(asm, mapName + '_MapScriptHeader');
-	var macros = {
-		triggers: 'dw',
-		callbacks: 'dbw'
-	};
-	var items = {
-		triggers:  [],
-		callbacks: []
-	};
+function readHeader(header, classes) {
+	var objects = {};
 	var l = 0;
-	for (i in items) {
+	for (var i in classes) {
+		objects[i] = [];
 		var count = -1;
-
 		while (l < header.length) {
 			var asm     = header[l][0];
 			var comment = header[l][1];
 
 			if (asm.trim() !== '') {
-
 				if (count === -1) {
 					count = parseInt(dbValue(asm));
 					if (count === 0) {
 						l++;
 						break;
 					}
-				} else if (items[i].length < count) {
-					items[i].push(macroValues(asm, macros[i]));
+				} else if (objects[i].length < count) {
+					objects[i].push(new classes[i](asm));
 				} else {
 					break;
 				}
@@ -199,55 +190,101 @@ function scriptHeader(asm, mapName) {
 			l++;
 		}
 	}
-	return items;
+	return objects;
+}
+
+
+function scriptHeader(asm, mapName) {
+	var header = asmAtLabel(asm, mapName + '_MapScriptHeader');
+	var classes = {
+		triggers: Trigger,
+		callbacks: Callback
+	};
+	return readHeader(header, classes);
+}
+
+var Trigger = function(asm) {
+	return macroValues(asm, 'dw');
+}
+
+var Callback = function(asm) {
+	return macroValues(asm, 'dbw');
 }
 
 
 function eventHeader(asm, mapName) {
 	var header = asmAtLabel(asm, mapName + '_MapEventHeader');
-	var items = {
-		warp_def: [],
-		xy_trigger: [],
-		signpost: [],
-		person_event: []
+	var classes = {
+		unknown: function(){}, // "filler"
+		warp_def: Warp,
+		xy_trigger: XYTrigger,
+		signpost: Signpost,
+		person_event: PersonEvent
 	};
-	var l = 0;
+	return readHeader(header, classes);
+}
 
-	// skip 2-byte filler
-	// more likely this is two items that never ended up being used
-	var filler = 2;
-	while (filler > 0) {
-		if (header[l][0].trim() !== '') {
-			filler -= dbValues(header[l][0]).length;
-		}
-		l++;
+var Warp = function(asm) {
+	var attributes = [
+		'y',
+		'x',
+		'warp_id',
+		'map_group',
+		'map_no'
+	];
+	var values = macroValues(asm, 'warp_def');
+	for (var i = 0; i < attributes.length; i++) {
+		this[attributes[i]] = values[i];
 	}
+}
 
-	for (i in items) {
-		var count = -1;
-
-		while (l < header.length) {
-			var asm     = header[l][0];
-			var comment = header[l][1];
-
-			if (asm.trim() !== '') {
-
-				if ((count === -1) && (asm.indexOf('db') !== -1)) {
-					count = parseInt(dbValue(asm));
-					if (count === 0) {
-						l++;
-						break;
-					}
-				} else if (items[i].length < count) {
-					items[i].push(macroValues(asm, i));
-				} else {
-					break;
-				}
-			}
-			l++;
-		}
+var XYTrigger = function(asm) {
+        var attributes = [
+        	'number',
+        	'y',
+        	'x',
+        	'unknown1',
+        	'script',
+        	'unknown2',
+        	'unknown3'
+        ];
+	var values = macroValues(asm, 'xy_trigger');
+	for (var i = 0; i < attributes.length; i++) {
+		this[attributes[i]] = values[i];
 	}
-	return items;
+}
+
+var Signpost = function(asm) {
+	var attributes = [
+		'y',
+		'x',
+		'function',
+		'pointer',
+	];
+	var values = macroValues(asm, 'signpost');
+	for (var i = 0; i < attributes.length; i++) {
+		this[attributes[i]] = values[i];
+	}
+}
+
+var PersonEvent = function(asm) {
+	var attributes = [
+		'pic',
+		'y',
+		'x',
+		'facing',
+		'movement',
+		'clock_hour',
+		'clock_daytime',
+		'color_function',
+		'sight_range',
+		'pointer',
+		'bit_no'
+	];
+	var values = macroValues(asm, 'person_event');
+	for (var i = 0; i < attributes.length; i++) {
+		this[attributes[i]] = values[i];
+	}
 }
 
 
@@ -781,7 +818,7 @@ Map.prototype.drawSprites = function() {
 	this.sprites = [];
 	for (var i = 0; i < this.events.person_event.length; i++) {
 		var person = this.events.person_event[i];
-		this.sprites[i] = new Sprite(i, person[0], (person[2] - 4) * 16, (person[1] - 4) * 16);
+		this.sprites[i] = new Sprite(i, person.pic, (person.x - 4) * 16, (person.y - 4) * 16);
 	}
 }
 
