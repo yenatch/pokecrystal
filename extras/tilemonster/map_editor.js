@@ -43,9 +43,7 @@ function main() {
 }
 
 function init() {
-	console.log('welcome to map editor');
 	controller = new Controller();
-	console.log('check out this rad map editor');
 }
 
 
@@ -457,7 +455,6 @@ var Controller = function() {
 
 				var name = document.forms['open']['name'].value;
 				name = name.capWords().replace(/\ /g, '');
-				console.log('opened', name);
 
 				var id = 0; //selfC.painters.length || 0;
 				selfC.painters[id] = new Painter(getMapById(name));
@@ -604,7 +601,6 @@ var Painter = function(pmap) {
 				selfP.paintx, selfP.painty, selfP.map.highlight
 			);
 			selfP.newtile = selfP.paint_tile;
-			console.log('paint at ' + selfP.paintx + ', ' + selfP.painty + ': ' + selfP.lasttile + ' -> ' + selfP.newtile);
 		}
 	}
 	
@@ -639,84 +635,6 @@ var Painter = function(pmap) {
 	}
 	return this;
 }
-
-
-// old painter proto
-/*
-var Painter = function(pmap) {
-	
-	// tile paint
-	var selfP = this;
-	
-	this.paint_tile = 1;
-	this.paintx = undefined;
-	this.painty = undefined;
-	this.lastx = undefined;
-	this.lasty = undefined;
-	this.paintedthisclick = false;
-	
-	checkPaint = function() {
-		if ((selfP.paintx !== selfP.lastx) | (selfP.painty !== selfP.lasty) | (selfP.paintedthisclick === false)) {
-			selfP.paintedthisclick = true;
-			selfP.paintx = selfP.lastx;
-			selfP.painty = selfP.lasty;
-			var lasttile = pmap.blockdata.charCodeAt(selfP.painty*pmap.width+selfP.paintx);
-			pmap.blockdata = pmap.blockdata.replaceCharCodeAt(selfP.painty*pmap.width+selfP.paintx, selfP.paint_tile);
-			pmap.drawMetatile(
-				pmap.blockdata.charCodeAt(selfP.painty*pmap.width+selfP.paintx),
-				selfP.paintx, selfP.painty, pmap.highlight
-			);
-			var newtile = pmap.blockdata.charCodeAt(selfP.painty*pmap.width+selfP.paintx);
-			console.log('paint at ' + selfP.paintx + ', ' + selfP.painty + ': ' + lasttile + ' -> ' + newtile);
-		}
-	}
-	
-	function resetPaint() {
-		selfP.paintint = setInterval(checkPaint, 16);
-		selfP.paintedthisclick = false;
-		selfP.mousedown = true;
-	}
-	
-	function stopPaint() {
-		clearInterval(selfP.paintint);
-		selfP.mousedown = false;
-		try {
-			pmap.drawMetatile(
-				pmap.blockdata.charCodeAt(selfP.lasty*pmap.width+selfP.lastx),
-				selfP.lastx, selfP.lasty, pmap.tileset
-			);
-		} catch(e) {};
-	}
-	
-	pmap.canvas.onmousedown   = function(e) { resetPaint(); }
-	pmap.canvas.onmouseup     = function(e) { stopPaint();  }
-	pmap.canvas.onmouseout    = function(e) { stopPaint();  }
-	pmap.canvas.oncontextmenu = function(e) { stopPaint();  }
-	
-	pmap.canvas.onmousemove = function(e) {
-		try {
-			pmap.drawMetatile(
-				pmap.blockdata.charCodeAt(selfP.lasty*pmap.width+selfP.lastx),
-				selfP.lastx, selfP.lasty, pmap.tileset
-			);
-		} catch(e) {};
-		
-		selfP.lastx = Math.floor(
-			(e.pageX - pmap.canvas.offsetLeft)/(pmap.highlight.tilew*pmap.highlight.metaw),
-			pmap.highlight.tilew
-		);
-		selfP.lasty = Math.floor(
-			(e.pageY - pmap.canvas.offsetTop)/(pmap.highlight.tileh*pmap.highlight.metah),
-			pmap.highlight.tileh
-		);
-		pmap.drawMetatile(
-			pmap.blockdata.charCodeAt(selfP.lasty*pmap.width+selfP.lastx),
-			selfP.lastx, selfP.lasty, pmap.highlight
-		);
-	}
-	return this;
-}
-*/
 
 
 function getMapById(name) {
@@ -982,7 +900,6 @@ var Sprite = function(id, pic, x, y) {
 			y = Math.floor(y / selfS.canvas.height) * selfS.canvas.height;
 			selfS.x = x;
 			selfS.y = y;
-			console.log(selfS.x, selfS.y);
 			selfS.draw();
 			return false;
 		};
