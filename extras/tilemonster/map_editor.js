@@ -378,6 +378,9 @@ function newmap(w, h, name) {
 // ui
 
 function updatePaintTile(painttile) {
+	if (document.forms['ptile']) {
+		document.forms['ptile']['ptilei'].value = painttile;
+	}
 	for (var i = 0; i < controller.painters.length; i++) {
 		controller.painters[i].paint_tile = painttile || 0;
 	}
@@ -390,16 +393,17 @@ var Controller = function() {
 	
 	this.bar = document.createElement('div');
 	this.bar.id = 'bar';
+	this.bar.className = 'bar';
 	
 	this.newMapButton = document.createElement('div');
-	this.newMapButton.innerHTML = '+';
+	this.newMapButton.innerHTML = 'New';
 	this.newMapButton.onclick = function(e) {
 		var id = 0;
 		if (!selfC.painters[id] || window.confirm('Overwrite existing map?')) { newmap(); }
 	};
 	
 	this.openButton = document.createElement('div');
-	this.openButton.innerHTML = 'o';
+	this.openButton.innerHTML = 'Open';
 	this.openButton.onclick = function(e) {
 		if (!document.getElementById('opendialog')) {
 			var openDialog = document.createElement('div');
@@ -438,7 +442,7 @@ var Controller = function() {
 				id: 'name',
 				value: '"Goldenrod City"'
 			}) + '>';
-			openForm.innerHTML = 'Name: ' + nameInput + ' <input id="open" name="open" type="submit" value="Open">';
+			openForm.innerHTML = 'Name:<br>' + nameInput + '<br><input id="open" name="open" type="submit" value="Open">';
 
 			var closeForm = document.createElement('form');
 			closeForm.id = 'close';
@@ -471,13 +475,14 @@ var Controller = function() {
 	}
 	
 	this.saveButton = document.createElement('div');
-	this.saveButton.innerHTML = 's';
+	this.saveButton.innerHTML = 'Save';
 	this.saveButton.onclick = function(e) {
 		var blk = selfC.painters[0].map.blockdata;
 		saveFile(blk);
 	};
 	
 	this.pickerTileForm = document.createElement('div');
+	this.pickerTileForm.className = 'barchild';
 	this.pickerTileForm.innerHTML = '<form id="ptile"><input id="ptilei" type="text" name="ptile" maxlength="3" value="1" autocomplete="off"></form>';
 	this.pickerTileForm.onsubmit = function(e) {
 		updatePaintTile(document.forms['ptile']['ptilei'].value);
@@ -486,16 +491,23 @@ var Controller = function() {
 	
 	this.pickerView = document.createElement('div');
 	this.pickerView.id = 'picker';
+	this.pickerView.className = 'picker';
 	this.pickerView.addEventListener('mousewheel', function(e) {
-		this.scrollLeft -= (e.wheelDelta);
+		this.scrollTop -= (e.wheelDelta);
 		e.preventDefault();
 	}, false);
+
+	this.pickerBar = document.createElement('div');
+	this.pickerBar.id = 'pickerbar';
+	this.pickerBar.className = 'pickerbar';
+	this.pickerBar.appendChild(this.pickerView);
 	
-	this.divs = [this.newMapButton, this.openButton, this.saveButton, this.pickerTileForm, this.pickerView]
+	this.divs = [this.newMapButton, this.openButton, this.saveButton]
 	for (i=0; i<this.divs.length; i++) {
 		this.divs[i].className = 'barchild';
 		this.bar.appendChild(this.divs[i]);
 	}
+	document.body.appendChild(this.pickerBar);
 	document.body.appendChild(this.bar);
 	
 	this.window = document.createElement('div');
@@ -512,27 +524,43 @@ var Picker = function(pmap) {
 	for (i=0; i<(pmap.tileset.metatiles.length); i++) {
 		blockdata += String.fromCharCode(i);
 	}
-	var w = blockdata.length;
-	var h = 1;
+	var w = 4;
+	var h = blockdata.length / w;
 
 	selfK.map = getCustomMap('pickerc', undefined, w, h, pmap.tileset_id);
 	selfK.map.blockdata = blockdata;
 
-	selfK.map.canvas.onclick = function(e) {
-		var pickx = Math.floor(
-			(e.pageX - selfK.map.canvas.getBoundingClientRect().left - window.scrollX)/(selfK.map.tileset.tilew*selfK.map.tileset.metaw),
-			selfK.map.tileset.tilew
+	selfK.getLastXY = function(e) {
+		selfK.lastx = Math.floor(
+			(e.pageX - selfK.map.canvas.getBoundingClientRect().left - window.scrollX)/(selfK.map.highlight.tilew*selfK.map.highlight.metaw),
+			selfK.map.highlight.tilew
 		);
-		var picky = Math.floor(
-			(e.pageY - selfK.map.canvas.getBoundingClientRect().top - window.scrollY)/(selfK.map.tileset.tileh*selfK.map.tileset.metah),
-			selfK.map.tileset.tileh
+		selfK.lasty = Math.floor(
+			(e.pageY - selfK.map.canvas.getBoundingClientRect().top - window.scrollY)/(selfK.map.highlight.tileh*selfK.map.highlight.metah),
+			selfK.map.highlight.tileh
 		);
-		document.forms['ptile']['ptilei'].value = picky*selfK.map.width + pickx;
-		updatePaintTile(document.forms['ptile']['ptilei'].value);
-	};
+	}
 
+	selfK.map.canvas.onclick = function(e) {
+		updatePaintTile(selfK.lasty * selfK.map.width + selfK.lastx);
+	};
+	selfK.map.canvas.onmousemove = function(e) {
+		selfK.getLastXY(e);
+		selfK.map.draw();
+		selfK.map.drawMetatile(
+			selfK.map.blockdata.charCodeAt(selfK.lasty*selfK.map.width+selfK.lastx),
+			selfK.lastx, selfK.lasty, selfK.map.highlight
+		);
+	};
+	selfK.map.canvas.onmouseout = function(e) {
+		selfK.map.draw();
+	};
+	selfK.map.canvas.oncontextmenu = function(e) {
+		selfK.map.draw();
+	};
 	controller.pickerView.innerHTML = '';
 	controller.pickerView.appendChild(selfK.map.canvas);
+	controller.pickerBar.style.right = '0';
 }
 
 var Painter = function(pmap) {
@@ -544,17 +572,26 @@ var Painter = function(pmap) {
 	controller.window.style.height = this.map.canvas.height + 'px';
 	controller.window.innerHTML = '';
 	controller.window.appendChild(this.map.canvas);
-	controller.pickerView.style.top = '9px';
 	
 	// tile paint
 	
 	this.paint_tile = 1;
-	this.paintx = undefined;
-	this.painty = undefined;
-	this.lastx = undefined;
-	this.lasty = undefined;
 	
+	this.getLastXY = function(e) {
+		selfP.lastx = Math.floor(
+			(e.pageX - selfP.map.canvas.getBoundingClientRect().left - window.scrollX)/(selfP.map.highlight.tilew*selfP.map.highlight.metaw),
+			selfP.map.highlight.tilew
+		);
+		selfP.lasty = Math.floor(
+			(e.pageY - selfP.map.canvas.getBoundingClientRect().top - window.scrollY)/(selfP.map.highlight.tileh*selfP.map.highlight.metah),
+			selfP.map.highlight.tileh
+		);
+	}
+
 	this.checkPaint = function(e) {
+		if (selfP.lasty === undefined || selfP.lastx === undefined) {
+			selfP.getLastXY(e);
+		}
 		var blockPos = selfP.lasty*selfP.map.width+selfP.lastx;
 		if (selfP.paintx !== selfP.lastx || selfP.painty !== selfP.lasty || selfP.paint_tile !== selfP.newtile) {
 			selfP.paintx = selfP.lastx;
@@ -592,15 +629,9 @@ var Painter = function(pmap) {
 				selfP.lastx, selfP.lasty, selfP.map.tileset
 			);
 		} catch(err) { };
-		
-		selfP.lastx = Math.floor(
-			(e.pageX - selfP.map.canvas.getBoundingClientRect().left - window.scrollX)/(selfP.map.highlight.tilew*selfP.map.highlight.metaw),
-			selfP.map.highlight.tilew
-		);
-		selfP.lasty = Math.floor(
-			(e.pageY - selfP.map.canvas.getBoundingClientRect().top - window.scrollY)/(selfP.map.highlight.tileh*selfP.map.highlight.metah),
-			selfP.map.highlight.tileh
-		);
+
+		selfP.getLastXY(e);
+
 		selfP.map.drawMetatile(
 			selfP.map.blockdata.charCodeAt(selfP.lasty*selfP.map.width+selfP.lastx),
 			selfP.lastx, selfP.lasty, selfP.map.highlight
