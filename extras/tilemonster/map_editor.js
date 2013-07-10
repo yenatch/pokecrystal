@@ -412,7 +412,7 @@ var Map = function(id, name, width, height, tileset_id, blockfile) {
 		selfM.tileset.getTileData();
 		selfM.draw();
 		if (selfM.events && selfM.events.person_event) {
-			selfM.drawSprites();
+			selfM.initSprites();
 		}
 		controller.window.style.left = '0px';
 	}
@@ -438,8 +438,6 @@ var Map = function(id, name, width, height, tileset_id, blockfile) {
 	} else {
 		this.getBlockData();
 	}
-
-	return this;
 };
 
 Map.prototype.draw = function() {
@@ -496,11 +494,10 @@ Map.prototype.newBlockData = function() {
 	}
 }
 
-Map.prototype.drawSprites = function() {
-	this.sprites = [];
+Map.prototype.initSprites = function() {
 	for (var i = 0; i < this.events.person_event.length; i++) {
-		var person = this.events.person_event[i];
-		this.sprites[i] = new Sprite(i, person.pic, (person.x - 4) * 16, (person.y - 4) * 16);
+		this.events.person_event[i] = new Sprite(i, this.events.person_event[i]);
+		this.events.person_event[i].parent = this;
 	}
 }
 
@@ -532,8 +529,6 @@ var Tileset = function(id, alpha, tilew, tileh, metaw, metah, collw, collh) {
 	this.img.onload = function() {
 		selfT.getTileData();
 	};
-
-	return this;
 };
 
 Tileset.prototype.getTileData = function() {
@@ -589,31 +584,38 @@ Tileset.prototype.getPalettes = function() {
 
 
 
-var Sprite = function(id, pic, x, y) {
+var Sprite = function(id, person) {
 	var selfS = this;
 
-	this.id = id || 0;
-	this.pic = pic || 0;
-	this.x = x || 0;
-	this.y = y || 0;
-	this.lastx = this.x;
-	this.lasty = this.y;
+	selfS.id = id || 0;
 
-	this.img = new Image();
-	this.img.id = 'sprite' + this.id;
-	this.img.src = ow_dir + parseInt(this.pic).toString().zfill(3) + '.png';
-	this.img.style.position = 'absolute';
-	this.img.style.left = this.x + 'px';
-	this.img.style.top  = this.y + 'px';
+	for (var i in person) {
+		selfS[i] = person[i];
+	}
+	selfS.pic = selfS.pic || 0;
+	selfS.x = (selfS.x - 4) * 16 || 0;
+	selfS.y = (selfS.y - 4) * 16 || 0;
+	selfS.lastx = selfS.x;
+	selfS.lasty = selfS.y;
 
-	this.palette = getPalettes(ow_dir + '000.pal')[0];
+	selfS.img = new Image();
+	selfS.img.id = 'sprite' + selfS.id;
+	selfS.img.src = ow_dir + parseInt(selfS.pic).toString().zfill(3) + '.png';
+	selfS.img.style.position = 'absolute';
+	selfS.img.style.left = selfS.x + 'px';
+	selfS.img.style.top  = selfS.y + 'px';
 
-	this.img.onload = function() {
+	selfS.palette = getPalettes(ow_dir + '000.pal')[0];
+
+	selfS.img.onload = function() {
 		selfS.canvas = canvas('sprite' + selfS.id, selfS.img.width, selfS.img.height);
 		selfS.context = selfS.canvas.getContext('2d');
 		selfS.image = flattenImageData(getRawImage(selfS.img), selfS.palette, selfS.canvas.width, selfS.canvas.height);
 		selfS.draw();
 		selfS.canvas.draggable = true;
+		selfS.canvas.ondragstart = function(e) {
+			document.body.removeChild(document.getElementById('balloon'));
+		};
 		selfS.canvas.ondrag = function(e) {
 			e.preventDefault();
 			var rect = document.getElementById('window').getBoundingClientRect();
@@ -635,6 +637,26 @@ var Sprite = function(id, pic, x, y) {
 			selfS.y = y;
 			selfS.draw();
 			return false;
+		};
+		selfS.canvas.onmouseover = function(e) {
+			var elem = document.getElementById('balloon');
+			if (!elem) {
+				elem = document.createElement('div');
+				elem.id = 'balloon';
+				elem.className = 'balloon';
+				document.body.appendChild(elem);
+			}
+			elem.innerHTML = ''
+				+ '<b><small>' + selfS.script_label + '</small></b>'
+				+ '<br>'
+				+ asmTextToHTML(parseScriptAt(selfS.parent.asm, selfS.script_label))
+			;
+			elem.style.position = 'absolute';
+			elem.style.left = e.pageX - 85 + 'px';
+			elem.style.bottom = window.innerHeight - e.pageY + 32 + 'px';
+		};
+		selfS.canvas.onmouseout = function(e) {
+			document.body.removeChild(document.getElementById('balloon'));
 		};
 	}
 }

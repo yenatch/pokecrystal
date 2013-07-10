@@ -293,12 +293,49 @@ var PersonEvent = function(asm) {
 		'clock_daytime',
 		'color_function',
 		'sight_range',
-		'pointer',
+		'script_label',
 		'bit_no'
 	];
 	var values = macroValues(asm, 'person_event');
 	for (var i = 0; i < attributes.length; i++) {
 		this[attributes[i]] = values[i];
 	}
+}
+
+var pksv = {
+	jumptextfaceplayer: readTextAt
+}
+
+function parseScriptAt(oasm, label) {
+	var asm = asmAtLabel(oasm, label);
+	var lines = [];
+	for (var l = 0; l < asm.length; l++) {
+		var line = asm[l][0].trim();
+		if (line !== '') {
+			var cmd = line.split(' ')[0];
+			if (pksv[cmd]) {
+				var result = pksv[cmd](oasm, macroValues(line, cmd)[0]);
+				lines.push(result);
+			}
+		}
+	}
+	return lines.join('\n');
+}
+
+function readTextAt(asm, label) {
+	var asm = asmAtLabel(asm, label);
+	var text = ''
+	var line;
+	for (var l = 0; l < asm.length; l++) {
+		line = asm[l][0].trim();
+		line = line;
+		text += line + '\n';
+	}
+	return text.trim();
+}
+
+function asmTextToHTML(text) {
+	text = text.replace(/\n/g, '<br>').replace(/db/g,'').replace(/\$0/g,'').replace(/\$4f/g, '').replace(/\$51/g, '').replace(/\$57/g, '').replace(/\$55/g, '').replace(/,/g, '').replace(/"/g, '');
+	return text;
 }
 

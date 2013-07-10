@@ -85,6 +85,17 @@ div#picker {
 	color: #998;
 }
 
+.balloon {
+	background-color: #ddd;
+	color: #333;
+	padding: 10px;
+	width: 150px;
+	border-radius: 10px;
+}
+.balloon small {
+	font-size: 0.75em;
+}
+
 .dialog {
 	position: fixed;
 	text-align: center;
@@ -105,9 +116,12 @@ div#picker {
 }
 input#name {
 	text-align: center;
+	font-weight: bold;
+	font-family: sans-serif;
 	width: 100%;
 	max-width: 300px;
 	font-size: 28px;
+	border-radius: 5px;
 }
 
 form#ptile {
