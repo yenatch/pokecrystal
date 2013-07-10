@@ -210,7 +210,25 @@ var Controller = function() {
 		var blk = selfC.painters[0].map.blockdata;
 		saveFile(blk);
 	};
-	
+
+	this.time = 1; // day
+
+	this.timeButton = document.createElement('div');
+	this.timeButton.innerHTML = '☼';
+	this.timeButton.style.fontSize = '28px';
+	this.timeButton.style.float = 'right';
+	this.timeButton.onclick = function(e) {
+		selfC.time++;
+		if (selfC.time > 2) selfC.time = 0;
+		selfC.timeButton.style.color = ['#999', '#ccc', '#666'][selfC.time];
+		selfC.painters[0].map.tileset.getPalettes();
+		selfC.painters[0].map.tileset.getTileData();
+		selfC.painters[0].map.highlight.getPalettes();
+		selfC.painters[0].map.highlight.getTileData();
+		selfC.painters[0].map.draw();
+		selfC.picker = new Picker(selfC.picker.map);
+	};
+
 	this.pickerTileForm = document.createElement('div');
 	this.pickerTileForm.className = 'barchild';
 	this.pickerTileForm.innerHTML = '<form id="ptile"><input id="ptilei" type="text" name="ptile" maxlength="3" value="1" autocomplete="off"></form>';
@@ -232,7 +250,7 @@ var Controller = function() {
 	this.pickerBar.className = 'pickerbar';
 	this.pickerBar.appendChild(this.pickerView);
 	
-	this.divs = [this.newMapButton, this.openButton, this.saveButton]
+	this.divs = [this.newMapButton, this.openButton, this.saveButton, this.timeButton]
 	for (i=0; i<this.divs.length; i++) {
 		this.divs[i].className = 'barchild';
 		this.bar.appendChild(this.divs[i]);
@@ -581,8 +599,8 @@ Tileset.prototype.getPaletteMap = function() {
 }
 
 Tileset.prototype.getPalettes = function() {
-	// Todo: roof palettes
-	this.palettes = getPalettes(palette_dir+'day.pal');
+	// TODO: roof palettes
+	this.palettes = getPalettes(palette_dir + ['morn', 'day', 'nite'][controller.time] + '.pal');
 }
 
 
