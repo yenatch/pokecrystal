@@ -454,24 +454,27 @@ Map.prototype.draw = function() {
 };
 
 Map.prototype.drawMetatile = function(id, tx, ty, tset) {
-	var tset = tset || this.tileset;
-	var pw = tset.metaw * tset.tilew * tx;
-	var ph = tset.metah * tset.tileh * ty;
-	var cur_tile = 0;
-	for (var dy=0; dy < tset.metah; dy++) {
-		for (var dx=0; dx < tset.metaw; dx++) {
-			cur_tile = tset.metatiles[id][dy*tset.metaw+dx];
+	try {
+		var tset = tset || this.tileset;
+		var pw = tset.metaw * tset.tilew * tx;
+		var ph = tset.metah * tset.tileh * ty;
+		var cur_tile = 0;
+		for (var dy=0; dy < tset.metah; dy++) {
+			for (var dx=0; dx < tset.metaw; dx++) {
+				cur_tile = tset.metatiles[id][dy*tset.metaw+dx];
 			
-			// Tile gfx are split in half to make VRAM mapping easier.
-			if (cur_tile >= 0x80) {
-				cur_tile -= 0x20;
+				// Tile gfx are split in half to make VRAM mapping easier.
+				if (cur_tile >= 0x80) {
+					cur_tile -= 0x20;
+				}
+				this.context.putImageData(
+					tset.tiles[cur_tile],
+					pw + dx * tset.tilew,
+					ph + dy * tset.tileh
+				);
 			}
-			this.context.putImageData(
-				tset.tiles[cur_tile],
-				pw + dx * tset.tilew,
-				ph + dy * tset.tileh
-			);
 		}
+	} catch(err) {
 	}
 }
 
