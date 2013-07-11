@@ -714,7 +714,10 @@ var Sprite = function(id, person) {
 			elem.style.bottom = window.innerHeight - e.pageY + 32 + 'px';
 		};
 		selfS.canvas.onmouseout = function(e) {
-			document.body.removeChild(document.getElementById('balloon'));
+			var elem = document.getElementById('balloon');
+			if (elem) {
+				document.body.removeChild(document.getElementById('balloon'));
+			}
 		};
 	}
 }
