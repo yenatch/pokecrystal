@@ -257,7 +257,19 @@ var Controller = function() {
 	}
 	document.body.appendChild(this.pickerBar);
 	document.body.appendChild(this.bar);
-	
+
+	this.coords = document.createElement('div');
+	this.coords.id = 'coords';
+	this.coords.className = 'coords';
+	this.coords.x = 0;
+	this.coords.y = 0;
+	this.coords.update = function(x, y) {
+		if (x !== undefined) selfC.x = x;
+		if (y !== undefined) selfC.y = y;
+		selfC.coords.innerHTML = '(' + selfC.x + ', ' + selfC.y + ')';
+	}
+	document.body.appendChild(this.coords);
+
 	this.window = document.createElement('div');
 	this.window.id = 'window';
 	document.body.appendChild(this.window);
@@ -326,14 +338,28 @@ var Painter = function(pmap) {
 	this.paint_tile = 1;
 	
 	this.getLastXY = function(e) {
+		var x = (e.pageX - selfP.map.canvas.getBoundingClientRect().left - window.scrollX)/(selfP.map.highlight.tilew*selfP.map.highlight.metaw);
+
 		selfP.lastx = Math.floor(
-			(e.pageX - selfP.map.canvas.getBoundingClientRect().left - window.scrollX)/(selfP.map.highlight.tilew*selfP.map.highlight.metaw),
+			x,
 			selfP.map.highlight.tilew
 		);
+		var tilex = Math.floor(
+			x * selfP.map.highlight.collh,
+			selfP.map.highlight.tilew
+		);
+
+		var y = (e.pageY - selfP.map.canvas.getBoundingClientRect().top - window.scrollY)/(selfP.map.highlight.tileh*selfP.map.highlight.metah);
+
 		selfP.lasty = Math.floor(
-			(e.pageY - selfP.map.canvas.getBoundingClientRect().top - window.scrollY)/(selfP.map.highlight.tileh*selfP.map.highlight.metah),
+			y,
 			selfP.map.highlight.tileh
 		);
+		var tiley = Math.floor(
+			y * selfP.map.highlight.collh,
+			selfP.map.highlight.tileh
+		);
+		document.getElementById('coords').update(tilex, tiley);
 	}
 
 	this.checkPaint = function(e) {
@@ -633,12 +659,7 @@ var Sprite = function(id, person) {
 		selfS.context = selfS.canvas.getContext('2d');
 		selfS.image = flattenImageData(getRawImage(selfS.img), selfS.palette, selfS.canvas.width, selfS.canvas.height);
 		selfS.draw();
-		selfS.canvas.draggable = true;
-		selfS.canvas.ondragstart = function(e) {
-			document.body.removeChild(document.getElementById('balloon'));
-		};
-		selfS.canvas.ondrag = function(e) {
-			e.preventDefault();
+		selfS.getLastXY = function(e) {
 			var rect = document.getElementById('window').getBoundingClientRect();
 			var x = e.pageX - rect.left - window.scrollX - 8;
 			var y = e.pageY - rect.top - window.scrollY - 8;
@@ -656,10 +677,26 @@ var Sprite = function(id, person) {
 			y = Math.floor(y / selfS.canvas.height) * selfS.canvas.height;
 			selfS.x = x;
 			selfS.y = y;
+		}
+		selfS.updateCoords = function() {
+			document.getElementById('coords').update(
+				selfS.x / (selfS.parent.tileset.metaw * selfS.parent.tileset.tilew / selfS.parent.tileset.collw),
+				selfS.y / (selfS.parent.tileset.metah * selfS.parent.tileset.tileh / selfS.parent.tileset.collh)
+			);
+		}
+		selfS.canvas.draggable = true;
+		selfS.canvas.ondragstart = function(e) {
+			document.body.removeChild(document.getElementById('balloon'));
+		};
+		selfS.canvas.ondrag = function(e) {
+			e.preventDefault();
+			selfS.getLastXY(e);
+			selfS.updateCoords();
 			selfS.draw();
 			return false;
 		};
 		selfS.canvas.onmouseover = function(e) {
+			selfS.updateCoords();
 			var elem = document.getElementById('balloon');
 			if (!elem) {
 				elem = document.createElement('div');

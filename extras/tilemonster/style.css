@@ -96,6 +96,12 @@ div#picker {
 	font-size: 0.75em;
 }
 
+.coords {
+	position: relative;
+	float: left;
+	top: 52px;
+}
+
 .dialog {
 	position: fixed;
 	text-align: center;
