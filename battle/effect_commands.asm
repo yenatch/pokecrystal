@@ -10675,5 +10675,13 @@ Function37ed5: ; 37ed5
 	ret
 ; 37ee2
 
+GrowthCommand:
+	callab _GrowthCommand
+	ret
+
+PUSHS
+SECTION "Growth", ROMX
+INCLUDE "battle/effects/growth.asm"
+POPS
 
 

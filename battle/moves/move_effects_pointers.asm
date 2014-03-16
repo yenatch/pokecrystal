@@ -11,7 +11,7 @@
 	dw AttackUp
 	dw DefenseUp
 	dw SpeedUp
-	dw Growth
+	dw SpecialAttackUp
 	dw SpecialDefenseUp
 	dw AccuracyUp
 	dw EvasionUp
@@ -155,4 +155,5 @@
 	dw BeatUp
 	dw Fly
 	dw DefenseCurl
+	dw Growth
 

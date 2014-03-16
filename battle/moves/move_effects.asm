@@ -286,6 +286,12 @@ SpeedUp:
 	endmove
 
 Growth:
+	checkobedience
+	usedmovetext
+	doturn
+	growth
+	endmove
+
 SpecialAttackUp:
 	checkobedience
 	usedmovetext
