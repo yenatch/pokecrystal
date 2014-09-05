@@ -158,6 +158,7 @@ endm
 	inc_time hMinutes, 60
 	inc_time hHours,   24
 	inc_time CurDay,    7
+	inc_time wSeason,   4
 	ret
 
 

@@ -1765,3 +1765,7 @@ sBoxMonOT:: ds NAME_LENGTH * MONS_PER_BOX ; afa6
 sBoxMonNicknames:: ds PKMN_NAME_LENGTH * MONS_PER_BOX ; b082
 sBoxMonNicknamesEnd::
 ; b15e
+
+
+SECTION "Custom", WRAM0
+wSeason:: ds 1
