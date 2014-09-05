@@ -138,54 +138,28 @@ FixDays:: ; 5e8
 
 
 FixTime:: ; 61d
-; add ingame time (set at newgame) to current time
-;				  day     hr    min    sec
-; store time in CurDay, hHours, hMinutes, hSeconds
-
-; second
-	ld a, [hRTCSeconds] ; S
-	ld c, a
-	ld a, [StartSecond]
-	add c
-	sub 60
-	jr nc, .updatesec
-	add 60
-.updatesec
-	ld [hSeconds], a
-	
-; minute
-	ccf ; carry is set, so turn it off
-	ld a, [hRTCMinutes] ; M
-	ld c, a
-	ld a, [StartMinute]
-	adc c
-	sub 60
-	jr nc, .updatemin
-	add 60
-.updatemin
-	ld [hMinutes], a
-	
-; hour
-	ccf ; carry is set, so turn it off
-	ld a, [hRTCHours] ; H
-	ld c, a
-	ld a, [StartHour]
-	adc c
-	sub 24
-	jr nc, .updatehr
-	add 24
-.updatehr
-	ld [hHours], a
-	
-; day
-	ccf ; carry is set, so turn it off
-	ld a, [hRTCDayLo] ; DL
-	ld c, a
-	ld a, [StartDay]
-	adc c
-	ld [CurDay], a
+; >rtc
 	ret
-; 658
+
+
+IncTime::
+
+inc_time: macro
+	ld a, [\1]
+	inc a
+	ld [\1], a
+	sub \2
+	ret c
+;	xor a
+	ld [\1], a
+endm
+
+	inc_time hSeconds, 60
+	inc_time hMinutes, 60
+	inc_time hHours,   24
+	inc_time CurDay,    7
+	ret
+
 
 Function658:: ; 658
 	xor a

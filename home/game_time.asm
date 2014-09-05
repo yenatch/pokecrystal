@@ -19,6 +19,7 @@ GameTimer:: ; 209e
 	ld a, 1
 	ld [rSVBK], a
 
+	call IncTime
 	call UpdateGameTimer
 
 	pop af
