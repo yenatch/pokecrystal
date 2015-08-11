@@ -591,7 +591,9 @@ ReadObjectEvents:: ; 241f
 	push hl
 	call Function2471
 	pop de
-	ld hl, MapObjects + OBJECT_LENGTH
+	ld a, -1
+	ld [MapObjects + OBJECT_LENGTH * 1 + 0], a
+	ld hl, MapObjects + OBJECT_LENGTH * 2
 	ld a, [de]
 	inc de
 	ld [wdc04], a
@@ -603,12 +605,12 @@ ReadObjectEvents:: ; 241f
 	call Function2457
 	ld a, [wdc04]
 	ld c, a
-	ld a, $10
+	ld a, NUM_OBJECTS - 2
 	sub c
 	jr z, .asm_2454
 	ld bc, $0001
 	add hl, bc
-	ld bc, $0010
+	ld bc, OBJECT_LENGTH
 .asm_244a
 	ld [hl], $0
 	inc hl
@@ -641,7 +643,7 @@ Function2457:: ; 2457
 	dec b
 	jr nz, .asm_2461
 	pop hl
-	ld bc, $0010
+	ld bc, OBJECT_LENGTH
 	add hl, bc
 	pop bc
 	dec c

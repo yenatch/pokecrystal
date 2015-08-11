@@ -2033,10 +2033,13 @@ ObjectStruct11:: ; d68e
 	ds OBJECT_STRUCT_LENGTH
 ObjectStruct12:: ; d6b6
 	ds OBJECT_STRUCT_LENGTH
+ObjectStruct13::
+	ds OBJECT_STRUCT_LENGTH
 ; d6de
 
 wd6de::
-	ds 64
+	ds 24
+
 
 MapObjects:: ; d71e
 	ds OBJECT_LENGTH * NUM_OBJECTS
@@ -2134,7 +2137,6 @@ UndergroundSwitchPositions:: ; d963
 FarfetchdPosition:: ; d964
 	ds 1 ; which position the ilex farfetch'd is in
 
-	ds 13
 
 
 SECTION "Map Triggers", WRAMX, BANK [1]

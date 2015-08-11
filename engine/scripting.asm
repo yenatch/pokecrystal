@@ -1048,7 +1048,7 @@ GetScriptPerson: ; 0x971e3
 	ret z
 	cp LAST_TALKED
 	ret z
-	dec a
+;	dec a
 	ret
 ; 0x971ea
 

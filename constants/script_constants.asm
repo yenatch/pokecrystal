@@ -1,5 +1,6 @@
 ; script vars
 PLAYER      EQU  0
+FOLLOWING   EQU  1
 LAST_TALKED EQU -2
 
 	const_def

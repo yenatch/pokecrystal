@@ -577,6 +577,8 @@ MAP_N_A   EQU -1
 	const SPRITE_RAIKOU ; 65
 	const SPRITE_STANDING_YOUNGSTER ; 66
 
+	const SPRITE_FOLLOWING
+
 const_value SET $80
 
 SPRITE_POKEMON EQU const_value
@@ -648,10 +650,12 @@ const_value SET 1
 	const PAL_OW_BLUE
 	const PAL_OW_GREEN
 	const PAL_OW_BROWN
-	const PAL_OW_PINK
+	const PAL_OW_PURPLE
 	const PAL_OW_SILVER
 	const PAL_OW_TREE
 	const PAL_OW_ROCK
+
+PAL_OW_PINK EQU PAL_OW_RED
 
 ; permissions
 const_value SET 1

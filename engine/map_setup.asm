@@ -80,6 +80,8 @@ MapSetupScripts: ; 15377
 	const map_keep_palettes       ; 2B = Recover all palettes
 	const map_text_scroll_off     ; 2C = Turn off text scroll (for town name overlays)
 	const map_stop_script         ; 2D = Deactivate code prolonging
+	const map_player_coord_warped ; 2E
+	const map_player_coord_connected ; 2F
 
 
 MapSetupScript4: ; 1538f
@@ -96,7 +98,7 @@ MapSetupScript1: ; 15392
 	db map_attributes
 	db map_change_callback
 	db map_spawn_coord
-	db map_player_coord
+	db map_player_coord_warped
 	db map_anchor_screen
 	db map_load_blocks
 	db map_buffer_screen
@@ -119,7 +121,7 @@ MapSetupScript11: ; 153a9
 	db map_attributes
 	db map_change_callback
 	db map_spawn_coord
-	db map_player_coord
+	db map_player_coord_warped
 	db map_anchor_screen
 	db map_load_blocks
 	db map_buffer_screen
@@ -143,7 +145,7 @@ MapSetupScript7: ; 153bf
 	db map_load_connection
 	db map_attributes
 	db map_change_callback
-	db map_player_coord
+	db map_player_coord_connected
 	db map_load_blocks
 	db map_load_tileset_header
 	db map_save_screen
@@ -168,7 +170,7 @@ MapSetupScript9: ; 153d2
 	db map_attributes
 	db map_warp_face
 	db map_change_callback
-	db map_player_coord
+	db map_player_coord_warped
 	db map_load_blocks
 	db map_buffer_screen
 	db map_lcd_off
@@ -340,6 +342,8 @@ MapSetupCommands: ; 15440
 	dbw BANK(RetainOldPalettes), RetainOldPalettes ; 2b
 	dbw BANK(DontScrollText), DontScrollText ; 2c
 	dbw BANK(ReturnFromMapSetupScript), ReturnFromMapSetupScript ; 2d
+	dbw BANK(RefreshPlayerCoords_AfterWarp), RefreshPlayerCoords_AfterWarp ; 2e
+	dbw BANK(RefreshPlayerCoords_AfterConnection), RefreshPlayerCoords_AfterConnection ; 2f
 ; 154ca
 
 

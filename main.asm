@@ -3184,12 +3184,20 @@ GetSpawnCoord: ; 8029
 	ld a, $ff
 	ld [wd4cd], a
 	ld [wd4ce], a
-	ld a, $0
+	ld a, PLAYER
 	ld hl, PlayerObjectTemplate
 	call Function19a6
-	ld b, $0
+
+	ld a, FOLLOWING
+	ld hl, FollowingObjectTemplate
+	call Function19a6
+	ld b, FOLLOWING
 	call Function808f
-	ld a, $0
+
+	ld b, PLAYER
+	call Function808f
+
+	ld a, PLAYER
 	call GetMapObject
 	ld hl, MAPOBJECT_COLOR
 	add hl, bc
@@ -3224,6 +3232,15 @@ PlayerObjectTemplate: ; 8071
 	; db $01, $00, $00, $0b, $ff, $ff, $ff, $00, $00, $00, $00, $ff, $ff
 ; 807e
 
+FollowingObjectTemplate:
+	person_event SPRITE_FOLLOWING, 0, 0, $1a, $ff, -1, -1, $0, 0, FollowingScript_, -1
+
+pushs
+section "FollowingScript_", rom0
+FollowingScript_:
+	farjump FollowingScript
+pops
+
 Function807e:: ; 807e
 	push de
 	ld a, b
@@ -3238,7 +3255,7 @@ Function807e:: ; 807e
 	ret
 ; 808f
 
-Function808f: ; 808f
+Function808f:: ; 808f
 	push bc
 	ld a, [XCoord]
 	add 4
@@ -3270,6 +3287,55 @@ Function80a1:: ; 80a1
 ; 80b8
 
 RefreshPlayerCoords: ; 80b8
+	call _RefreshPlayerCoords
+	ret
+
+RefreshPlayerCoords_AfterWarp:
+	call _RefreshPlayerCoords
+	ld b, PLAYER
+	ld c, FOLLOWING
+	call MoveToObject
+	ret
+
+RefreshPlayerCoords_AfterConnection:
+	call _RefreshPlayerCoords
+	ld b, PLAYER
+	ld c, FOLLOWING
+	call MoveToObject
+	ld b, FOLLOWING
+	call GetObjectCoord
+
+	ld a, [wd151]
+	and a
+	jr z, .south
+	dec a
+	jr z, .north
+	dec a
+	jr z, .west
+	dec a
+	jr z, .east
+	jr .uh_oh
+
+.south
+	dec c
+	jr .ok
+.north
+	inc c
+	jr .ok
+.west
+	inc b
+	jr .ok
+.east
+	dec b
+.ok
+	ld a, FOLLOWING
+	call MoveToCoord
+
+.uh_oh
+	call RefreshFollowingCoords
+	ret
+
+_RefreshPlayerCoords:
 	ld a, [XCoord]
 	add 4
 	ld d, a
@@ -3298,6 +3364,11 @@ RefreshPlayerCoords: ; 80b8
 	ret
 ; 80e7
 
+RefreshFollowingCoords::
+	ld b, PLAYER
+	ld c, FOLLOWING
+	call Function839e
+	ret
 
 CopyObjectStruct:: ; 80e7
 	call Function2707
@@ -3387,7 +3458,7 @@ Function811d: ; 811d
 	ret
 ; 8177
 
-Function8177: ; 8177
+Function8177:: ; 8177
 	ld bc, MapObjects + OBJECT_LENGTH
 	ld a, 1
 .loop
@@ -3754,6 +3825,67 @@ Function8388: ; 8388
 	db 8, 9, 10, 11
 ; 839e
 
+
+MoveToObject::
+	push bc
+	ld a, c
+	call GetMapObject
+	ld d, b
+	ld e, c
+	pop bc
+	ld a, b
+	call GetMapObject
+
+	ld hl, MAPOBJECT_X_COORD
+	add hl, bc
+	ld a, [hl]
+
+	ld hl, MAPOBJECT_X_COORD
+	add hl, de
+	ld [hl], a
+
+	ld hl, MAPOBJECT_Y_COORD
+	add hl, bc
+	ld a, [hl]
+
+	ld hl, MAPOBJECT_Y_COORD
+	add hl, de
+	ld [hl], a
+
+	ret
+
+GetObjectCoord::
+	ld a, b
+	call GetMapObject
+	ld d, b
+	ld e, c
+
+	ld hl, MAPOBJECT_X_COORD
+	add hl, de
+	ld b, [hl]
+
+	ld hl, MAPOBJECT_Y_COORD
+	add hl, de
+	ld c, [hl]
+
+	ret
+
+MoveToCoord::
+	push bc
+	call GetMapObject
+	ld d, b
+	ld e, c
+	pop bc
+
+	ld hl, MAPOBJECT_X_COORD
+	add hl, de
+	ld [hl], b
+
+	ld hl, MAPOBJECT_Y_COORD
+	add hl, de
+	ld [hl], c
+
+	ret
 
 Function839e:: ; 839e
 	push bc
@@ -16581,8 +16713,17 @@ Function14135:: ; 14135
 	ld a, [UsedSprites + 1]
 	ld [$ffbe], a
 	call Function143c8
+	call AddFollowSprite
 	ret
 ; 14146
+
+AddFollowSprite:
+	ld a, [UsedSprites + FOLLOWING * 2]
+	ld [$ffbd], a
+	ld a, [UsedSprites + FOLLOWING * 2 + 1]
+	ld [$ffbe], a
+	call Function143c8
+	ret
 
 Function14146: ; 14146
 	ld hl, wd13e
@@ -16615,7 +16756,7 @@ Function14168:: ; 14168
 	ret
 ; 1416f
 
-Function1416f: ; 1416f
+Function1416f:: ; 1416f
 	xor a
 	ld bc, $0040
 	ld hl, UsedSprites
@@ -16712,6 +16853,9 @@ AddIndoorSprites: ; 141d9
 
 
 AddOutdoorSprites: ; 141ee
+	ld a, SPRITE_FOLLOWING
+	call AddSpriteGFX
+
 	ld a, [MapGroup]
 	dec a
 	ld c, a
@@ -16723,7 +16867,7 @@ endr
 	ld a, [hli]
 	ld h, [hl]
 	ld l, a
-	ld c, $17
+	ld c, $15
 .loop
 	push bc
 	ld a, [hli]
@@ -16770,6 +16914,10 @@ SafeGetSprite: ; 14236
 ; 1423c
 
 GetSprite: ; 1423c
+
+	call GetFollowingSprite
+	ret c
+
 	call GetMonSprite
 	ret c
 
@@ -16861,8 +17009,97 @@ GetMonSprite: ; 14259
 	ret
 ; 142a7
 
+GetFirstAliveMon::
+	ld e, 0
+	ld a, [PartyCount]
+	ld d, a
+	and a
+	jr z, .none
+
+	ld hl, PartyMon1HP
+	ld bc, PartyMon2 - PartyMon1
+.loop
+	ld a, [hli]
+	or [hl]
+	jr nz, .ok
+	inc e
+	ld a, e
+	cp d
+	jr nc, .none
+	add hl, bc
+	jr .loop
+.ok
+	ld bc, PartyMon1Species - (PartyMon1HP + 1)
+	add hl, bc
+	ld a, [hl]
+	ret
+.none
+	xor a
+	ret
+
+GetFollowingSprite:
+	cp SPRITE_FOLLOWING
+	jr nz, .nope
+
+	call GetFirstAliveMon
+
+	push af
+
+	dec a
+
+	ld de, 0
+.mod
+	inc de
+	sub 42
+	jr nc, .mod
+	dec de
+	add 42
+
+	push af
+	ld hl, PokemonSpritePointers
+	add hl, de
+	add hl, de
+	add hl, de
+	ld a, [hli]
+	ld b, a
+	ld a, [hli]
+	ld h, [hl]
+	ld l, a
+	pop af
+
+	push bc
+	ld bc, 16 * 4 * 6
+	call AddNTimes
+	pop bc
+
+	ld d, h
+	ld e, l
+	ld h, 0
+	ld c, 12
+	ld l, WALKING_SPRITE
+
+	pop af
+
+	scf
+	ret
+.nope
+	and a
+	ret
+
+PokemonSpritePointers:
+	dbw BANK(PokemonSprites1), PokemonSprites1
+	dbw BANK(PokemonSprites2), PokemonSprites2
+	dbw BANK(PokemonSprites3), PokemonSprites3
+	dbw BANK(PokemonSprites4), PokemonSprites4
+	dbw BANK(PokemonSprites5), PokemonSprites5
+	dbw BANK(PokemonSprites6), PokemonSprites6
+
 
 Function142a7:: ; 142a7
+
+	cp SPRITE_FOLLOWING
+	jr z, .following
+
 	cp SPRITE_POKEMON
 	jr nc, .is_pokemon
 
@@ -16882,6 +17119,9 @@ Function142a7:: ; 142a7
 	scf
 	ret
 
+.following
+	ld a, WALKING_SPRITE
+
 .is_pokemon
 	and a
 	ret
@@ -16889,6 +17129,12 @@ Function142a7:: ; 142a7
 
 
 _GetSpritePalette:: ; 142c4
+	ld a, c
+	push bc
+	call GetFollowingSprite
+	pop bc
+	jr c, .following
+
 	ld a, c
 	call GetMonSprite
 	jr c, .is_pokemon
@@ -16900,6 +17146,16 @@ _GetSpritePalette:: ; 142c4
 	ld a, 6
 	call AddNTimes
 	ld c, [hl]
+	ret
+
+.following
+	ld hl, FollowingPalettes
+	ld b, 0
+	ld c, a
+	add hl, bc
+	ld a, BANK(FollowingPalettes)
+	call GetFarByte
+	ld c, a
 	ret
 
 .is_pokemon
@@ -16969,7 +17225,9 @@ LoadSpriteGFX: ; 14306
 	and a
 	jr z, .done
 	push hl
+	push bc
 	call .LoadSprite
+	pop bc
 	pop hl
 	ld [hli], a
 	dec b
@@ -17143,7 +17401,7 @@ GetSpriteLength: ; 14386
 ; 1439b
 
 
-Function1439b: ; 1439b
+Function1439b:: ; 1439b
 	ld hl, UsedSprites
 	ld c, SPRITE_GFX_LIST_CAPACITY
 .asm_143a0
@@ -17403,8 +17661,6 @@ OutdoorSprites: ; 144b8
 
 Group13Sprites: ; 144ec
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17429,8 +17685,6 @@ Group13Sprites: ; 144ec
 
 Group23Sprites: ; 14503
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17455,8 +17709,6 @@ Group23Sprites: ; 14503
 
 Group14Sprites: ; 1451a
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17481,8 +17733,6 @@ Group14Sprites: ; 1451a
 
 Group6Sprites: ; 14531
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17507,8 +17757,6 @@ Group6Sprites: ; 14531
 
 Group7Sprites: ; 14548
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17533,8 +17781,6 @@ Group7Sprites: ; 14548
 
 Group25Sprites: ; 1455f
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17559,8 +17805,6 @@ Group25Sprites: ; 1455f
 
 Group21Sprites: ; 14576
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17585,8 +17829,6 @@ Group21Sprites: ; 14576
 
 Group18Sprites: ; 1458d
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17611,8 +17853,6 @@ Group18Sprites: ; 1458d
 
 Group12Sprites: ; 145a4
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17637,8 +17877,6 @@ Group12Sprites: ; 145a4
 
 Group17Sprites: ; 145bb
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17663,8 +17901,6 @@ Group17Sprites: ; 145bb
 
 Group16Sprites: ; 145d2
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17689,8 +17925,6 @@ Group16Sprites: ; 145d2
 
 Group24Sprites: ; 145e9
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17715,8 +17949,6 @@ Group24Sprites: ; 145e9
 
 Group26Sprites: ; 14600
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17741,8 +17973,6 @@ Group26Sprites: ; 14600
 
 Group19Sprites: ; 14617
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17767,8 +17997,6 @@ Group19Sprites: ; 14617
 
 Group10Sprites: ; 1462e
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17793,8 +18021,6 @@ Group10Sprites: ; 1462e
 
 Group4Sprites: ; 14645
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17819,8 +18045,6 @@ Group4Sprites: ; 14645
 
 Group8Sprites: ; 1465c
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17845,7 +18069,6 @@ Group8Sprites: ; 1465c
 
 Group11Sprites: ; 14673
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
 	db SPRITE_POKE_BALL
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
@@ -17871,8 +18094,6 @@ Group11Sprites: ; 14673
 
 Group22Sprites: ; 1468a
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17897,8 +18118,6 @@ Group22Sprites: ; 1468a
 
 Group1Sprites: ; 146a1
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17923,8 +18142,6 @@ Group1Sprites: ; 146a1
 
 Group9Sprites: ; 146b8
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17949,8 +18166,6 @@ Group9Sprites: ; 146b8
 
 Group2Sprites: ; 146cf
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -17975,8 +18190,6 @@ Group2Sprites: ; 146cf
 
 Group5Sprites: ; 146e6
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -18001,8 +18214,6 @@ Group5Sprites: ; 146e6
 
 Group3Sprites: ; 146fd
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -18027,8 +18238,6 @@ Group3Sprites: ; 146fd
 
 Group15Sprites: ; 14714
 	db SPRITE_SUICUNE
-	db SPRITE_SILVER_TROPHY
-	db SPRITE_FAMICOM
 	db SPRITE_POKEDEX
 	db SPRITE_WILL
 	db SPRITE_KAREN
@@ -25233,7 +25442,7 @@ MenuDataHeader_0x24547: ; 0x24547
 	db 1 ; default option
 ; 0x2454f
 
-Function2454f: ; 2454f
+Function2454f:: ; 2454f
 	ld hl, wd81e
 	xor a
 	ld bc, NUM_OBJECTS
@@ -25270,6 +25479,15 @@ Function2457d: ; 2457d (9:457d)
 	ld a, [hl]
 	and a
 	jr z, .minus_one
+
+	; bad hack, but there should be more sophisticated conditions for sprite appearance than event flags...
+	cp SPRITE_FOLLOWING
+	jr nz, .ok
+	ld a, [PartyCount]
+	and a
+	jr z, .minus_one
+.ok
+
 	ld hl, MAPOBJECT_EVENT_FLAG
 	add hl, bc
 	ld a, [hli]
@@ -52120,6 +52338,14 @@ IsNPCInFront: ; 80341
 	ld bc, ObjectStructs ; redundant
 	callba Function7041
 	jr nc, .asm_80369
+
+	; Don't collide with following NPCs.
+	ld hl, OBJECT_03
+	add hl, bc
+	ld a, [hl]
+	cp $1a
+	jr z, .asm_80369
+
 	call Function8036f
 	jr c, .asm_8036c
 
@@ -90397,7 +90623,7 @@ LoadMapPalettes: ; 1047eb
 	jp GetSGBLayout
 ; 1047f0
 
-RefreshMapSprites: ; 1047f0
+RefreshMapSprites:: ; 1047f0
 	call ClearSprites
 	callba ReturnFromMapSetupScript
 	call Function2914

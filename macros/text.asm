@@ -42,6 +42,12 @@ start_asm: macro
 	db 8
 	endm
 
+end_asm: macro
+	ld hl, ._\@
+	ret
+._\@
+	endm
+
 deciram: macro
 	db 9
 	dw \1

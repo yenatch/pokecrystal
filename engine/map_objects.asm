@@ -3093,8 +3093,17 @@ SpawnInFacingDown: ; 57d9
 ; 57db
 
 Function57db: ; 57db
+	push af
 	ld bc, PlayerStruct
 	call SetSpriteDirection
+	ld a, FOLLOWING
+	call Function18de ; GetMapObjectStruct
+	jr c, .ok
+	pop af
+	push af
+	call SetSpriteDirection
+.ok
+	pop af
 	ret
 ; 57e2
 
@@ -3685,4 +3694,5 @@ endr
 	dw ObjectStruct10
 	dw ObjectStruct11
 	dw ObjectStruct12
+	dw ObjectStruct13
 ; 5ae8

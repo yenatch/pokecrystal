@@ -150,6 +150,8 @@ EnterMap: ; 9673e
 	ld [PoisonStepCount], a
 .dontresetpoison
 
+	callba RefreshFollowingCoords
+
 	xor a
 	ld [$ff9f], a
 	ld a, 2 ; HandleMap

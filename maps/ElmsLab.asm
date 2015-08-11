@@ -178,7 +178,10 @@ CyndaquilPokeBallScript:
 	waitbutton
 	keeptextopen
 	givepoke CYNDAQUIL, 5, BERRY, 0
+	moveperson FOLLOWING, 10 - 4, 7 - 4
 	loadmovesprites
+	scall AddFollowing
+	cry CYNDAQUIL
 	checkcode VAR_FACING
 	if_equal $3, ElmDirectionsScript
 	applymovement PLAYER, AfterCyndaquilMovement
@@ -208,7 +211,10 @@ TotodilePokeBallScript:
 	waitbutton
 	keeptextopen
 	givepoke TOTODILE, 5, BERRY, 0
+	moveperson FOLLOWING, 11 - 4, 7 - 4
 	loadmovesprites
+	scall AddFollowing
+	cry TOTODILE
 	applymovement PLAYER, AfterTotodileMovement
 	jump ElmDirectionsScript
 
@@ -236,7 +242,10 @@ ChikoritaPokeBallScript:
 	waitbutton
 	keeptextopen
 	givepoke CHIKORITA, 5, BERRY, 0
+	moveperson FOLLOWING, 12 - 4, 7 - 4
 	loadmovesprites
+	scall AddFollowing
+	cry CHIKORITA
 	applymovement PLAYER, AfterChikoritaMovement
 	jump ElmDirectionsScript
 
@@ -273,6 +282,12 @@ ElmDirectionsScript:
 	setevent EVENT_RIVAL_CHERRYGROVE_CITY
 	dotrigger $5
 	domaptrigger GROUP_NEW_BARK_TOWN, MAP_NEW_BARK_TOWN, $1
+	end
+
+AddFollowing:
+	callasm RefreshFollowingCoords
+	appear FOLLOWING
+	loadmovesprites ; intentional, this is required
 	end
 
 ElmDescribesMrPokemonScript:
