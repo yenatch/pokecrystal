@@ -10,6 +10,7 @@ Note that this requires python2.7 for the moment.
 	cd ..
 
 	git clone --recursive git://github.com/kanzure/pokecrystal.git
+	easy_install pypng
 	cd pokecrystal
 
 To build **pokecrystal.gbc**:
@@ -33,6 +34,7 @@ In the shell, run:
 	cd ..
 
 	git clone --recursive git://github.com/kanzure/pokecrystal.git
+	easy_install pypng
 	cd pokecrystal
 
 To build **pokecrystal.gbc**:
@@ -44,7 +46,7 @@ To build **pokecrystal.gbc**:
 
 To build on Windows, use [**Cygwin**](http://cygwin.com/install.html) (32-bit).
 
-In the installer, select the following packages: `make` `git` `python` `python-setuptools` `gcc` `libsasl2` `ca-certificates`
+In the installer, select the following packages: `make` `git` `python` `python-setuptools` `gcc-core` `libsasl2-3` `ca-certificates`
 
 Then get the most recent version of [**rgbds**](https://github.com/bentley/rgbds/releases/).
 Put `rgbasm.exe`, `rgblink.exe` and `rgbfix.exe` in `C:\cygwin\usr\local\bin`.
@@ -52,6 +54,7 @@ Put `rgbasm.exe`, `rgblink.exe` and `rgbfix.exe` in `C:\cygwin\usr\local\bin`.
 In the **Cygwin terminal**:
 
 	git clone --recursive git://github.com/kanzure/pokecrystal.git
+	easy_install pypng
 	cd pokecrystal
 
 To build:

@@ -69,6 +69,19 @@ battle_struct: MACRO
 \1Type2::     db
 ENDM
 
+box: MACRO
+\1::
+\1Count::           ds 1
+\1Species::         ds MONS_PER_BOX + 1
+\1Mons::
+\1Mon1::            box_struct \1Mon1
+\1Mon2::            ds box_struct_length * (MONS_PER_BOX +- 1)
+\1MonOT::           ds NAME_LENGTH * MONS_PER_BOX
+\1MonNicknames::    ds PKMN_NAME_LENGTH * MONS_PER_BOX
+\1MonNicknamesEnd::
+\1End::             ds 2 ; padding
+ENDM
+
 
 channel_struct: MACRO
 ; Addreses are Channel1 (c101).
@@ -356,24 +369,11 @@ wc310:: ds 1
 wc311:: ds 1
 wc312:: ds 1
 wc313:: ds 1
-wc314:: ds 1
-wc315:: ds 1
-wc316:: ds 1
-wc317:: ds 1
-wc318:: ds 1
-wc319:: ds 1
-wc31a:: ds 1
-wc31b:: ds 1
-wc31c:: ds 1
-wc31d:: ds 1
-wc31e:: ds 1
-wc31f:: ds 1
-wc320:: ds 4
-wc324:: ds 34
-wc346:: ds 94
-wc3a4:: ds 8
-wc3ac:: ds 8
-wc3b4:: ds 1
+wPartyMonMenuIconAnims:: ds 96 ; c314
+wc374:: ds 48 ; c374
+wc3a4:: ds 8 ; c3b4
+wc3ac:: ds 8 ; c3bc
+wc3b4:: ds 1 ; c3
 wc3b5:: ds 1
 
 CurIcon:: ; c3b6
@@ -441,6 +441,7 @@ TileMapEnd::
 
 SECTION "Battle", WRAM0
 
+wMisc::
 wBattle::
 
 wc608::
@@ -877,6 +878,9 @@ IF DEF(CRYSTAL11)
 wPokedexStatus::
 ENDC
 	ds 3
+
+wMiscEnd::
+
 wc7e8:: ds 24
 
 
@@ -1308,6 +1312,7 @@ Options2:: ; cfd1
 
 	ds 2
 OptionsEnd::
+
 wcfd4:: ds 1
 wcfd5:: ds 1
 wcfd6:: ds 1
@@ -1719,7 +1724,7 @@ IsInBattle:: ; d22d
 ; 2: trainer battle
 	ds 1
 
-wd22e:: ds 1
+TempWildMonSpecies:: ds 1
 OtherTrainerClass:: ; d22f
 ; class (Youngster, Bug Catcher, etc.) of opposing trainer
 ; 0 if opponent is a wild Pokémon, not a trainer
@@ -1898,6 +1903,7 @@ wd466:: ds 6
 wd46c:: ds 1
 wd46d:: ds 5
 
+wCrystalData::
 PlayerGender:: ; d472
 ; bit 0:
 ;	0 male
@@ -1909,7 +1915,11 @@ wd475:: ds 1
 wd476:: ds 1
 wd477:: ds 1
 wd478:: ds 1
+wCrystalDataEnd::
+
 wd479:: ds 2
+
+wPlayerData::
 
 PlayerID:: ; d47b
 	ds 2
@@ -2139,7 +2149,7 @@ FarfetchdPosition:: ; d964
 
 
 
-SECTION "Map Triggers", WRAMX, BANK [1]
+;SECTION "Map Triggers", WRAMX, BANK [1]
 
 wPokecenter2FTrigger::                       ds 1 ; d972
 wTradeCenterTrigger::                        ds 1 ; d973
@@ -2224,7 +2234,7 @@ wMobileBattleRoomTrigger::                   ds 1 ; d9c0
 	ds 49
 
 
-SECTION "Events", WRAMX, BANK [1]
+;SECTION "Events", WRAMX, BANK [1]
 
 wJackFightCount::    ds 1
                      ds 1
@@ -2290,7 +2300,7 @@ BikeFlags:: ; dbf5
 wCurrentMapTriggerPointer:: ; dbf7
 	ds 2
 
-wdbf9:: ds 2
+wCurrentCaller:: ds 2
 wdbfb:: ds 1
 wdbfc:: ds 1
 wdbfd:: ds 1
@@ -2363,9 +2373,9 @@ wdc41:: ds 1
 wdc42:: ds 8
 wdc4a:: ds 1
 wdc4b:: ds 1
-wdc4c:: ds 4
-wdc50:: ds 4
-wdc54:: ds 4
+wDailyRematchFlags:: ds 4
+wDailyPhoneItemFlags:: ds 4
+wDailyPhoneTimeOfDayFlags:: ds 4
 wdc58:: ds 2
 wdc5a:: ds 1
 wdc5b:: ds 1
@@ -2388,6 +2398,11 @@ wdc9f:: ds 1
 wdca0:: ds 1
 wdca1:: ds 3
 wdca4:: ds 1
+
+wPlayerDataEnd::
+
+
+wMapData::
 
 VisitedSpawns:: ; dca5
 	flag_array 27
@@ -2424,8 +2439,12 @@ XCoord:: ; dcb8
 wdcbf:: ds 1
 	ds 23
 
+wMapDataEnd::
+
 
 SECTION "Party", WRAMX, BANK [1]
+
+wPokemonData::
 
 PartyCount:: ; dcd7
 	ds 1 ; number of Pokémon in party
@@ -2451,8 +2470,6 @@ PartyMonNicknamesEnd::
 	ds 22
 
 
-SECTION "Pokedex", WRAMX, BANK [1]
-
 PokedexCaught:: ; de99
 	flag_array NUM_POKEMON
 EndPokedexCaught::
@@ -2468,8 +2485,6 @@ UnlockedUnowns:: ; def3
 
 wdef4:: ds 1
 
-
-SECTION "Daycare", WRAMX, BANK [1]
 
 wDaycareMan:: ; def5
 ; bit 7: active
@@ -2507,8 +2522,6 @@ wEggMon::  box_struct wEggMon ; df7b
 wdf9b:: ds 1
 
 
-SECTION "Misc Pokemon", WRAMX, BANK [1]
-
 wdf9c::
 wContestMon:: party_struct wContestMon ; df9c
 
@@ -2542,6 +2555,8 @@ wdfec:: ds 1
 
 	ds 5
 wdff5::
+
+wPokemonDataEnd::
 
 
 SECTION "Pic Animations", WRAMX, BANK [2]
@@ -2585,7 +2600,10 @@ w2_d188:: ds 1
 
 SECTION "WRAM 3", WRAMX, BANK [3]
 
-	ds $800
+	ds $100
+
+w3_d100::
+	ds $700
 
 w3_d800:: ds 1
 
@@ -2602,7 +2620,14 @@ LYOverrides:: ; d100
 	ds SCREEN_HEIGHT_PX
 LYOverridesEnd::
 
-	ds $100 - SCREEN_HEIGHT_PX
+	ds 1
+w5_d191:: ds 1
+w5_d192:: ds 1
+w5_d193:: ds 1
+w5_d194:: ds 1
+w5_d195:: ds 1
+
+ds 106
 
 LYOverridesBackup:: ; d200
 	ds SCREEN_HEIGHT_PX
@@ -2654,22 +2679,128 @@ w6_d600:: ds $600
 
 SECTION "Scratch", SRAM, BANK [0]
 
+sScratch::
+
+
+SECTION "SRAM Bank 0", SRAM [$a600], BANK [0]
+
+s0_a600:: ds $11a
+s0_a71a:: ds $11a
+s0_a834:: ds $1d7
+s0_aa0b:: ds $1d7
+
+s0_abe2:: ds 1
+s0_abe3:: ds 1
+s0_abe4:: ds 1
+s0_abe5:: ds 1
+s0_abe6:: ds 10
+s0_abf0:: ds 10
+s0_abfa:: ds 2
+	ds 1
+s0_abfd:: ds 1
+s0_abfe:: ds 12
+sMysteryGiftTrainer:: ds (1 + 1 + NUM_MOVES) * PARTY_LENGTH + 1
+	ds 1
+s0_abe4End::
+
+	ds $30
+
+s0_ac60:: ds 8
+s0_ac68:: ds 1
+s0_ac69:: ds 1
+s0_ac6a:: ds 1
+
+	ds $b200 - $ac6b
+
+sBackupOptions:: ds OptionsEnd - Options
+
+s0_b208:: ds 1
+
+sBackupGameData::
+sBackupPlayerData::  ds wPlayerDataEnd - wPlayerData
+sBackupMapData::     ds wMapDataEnd - wMapData
+sBackupPokemonData:: ds wPokemonDataEnd - wPokemonData
+sBackupGameDataEnd::
+
+; bd83
+	ds $18a
+; bf0d
+
+sBackupChecksum:: ds 2
+s0_bf0f:: ds 1
+sStackTop:: ds 2
+
 
 SECTION "SRAM Bank 1", SRAM, BANK [1]
 
-SECTION "BoxMons", SRAM [$ad10], BANK [1]
+sOptions:: ds OptionsEnd - Options
 
-sBoxCount::   ds 1 ; ad10
-sBoxSpecies:: ds MONS_PER_BOX ; ad11
-	ds 1
+s1_a008:: ds 1
 
-sBoxMons:: ; ad26
-sBoxMon1:: box_struct sBoxMon1
-sBoxMon2::
-	ds box_struct_length * (MONS_PER_BOX +- 1)
+sGameData::
+sPlayerData::  ds wPlayerDataEnd - wPlayerData
+sMapData::     ds wMapDataEnd - wMapData
+sPokemonData:: ds wPokemonDataEnd - wPokemonData
+sGameDataEnd::
 
-sBoxMonOT:: ds NAME_LENGTH * MONS_PER_BOX ; afa6
+; ab83
+	ds $18a
+; ad0d
 
-sBoxMonNicknames:: ds PKMN_NAME_LENGTH * MONS_PER_BOX ; b082
-sBoxMonNicknamesEnd::
-; b15e
+sChecksum::   ds 2
+s1_ad0f::     ds 1
+
+; ad10
+	box sBox
+; b160
+
+	ds $100
+
+sLinkBattleStats:: ; b260
+sLinkBattleWins::   ds 2
+sLinkBattleLosses:: ds 2
+sLinkBattleDraws::  ds 2
+	ds $5a
+sLinkBattleStatsEnd::
+
+sHallOfFame:: ; b2c0
+	ds HOF_LENGTH * NUM_HOF_TEAMS
+sHallOfFameEnd::
+
+s1_be3c:: ds 1
+
+sCrystalData::
+	ds wCrystalDataEnd - wCrystalData
+s1_be44:: ds 1
+s1_be45:: ds 1
+
+sBattleTower:: ; be46
+sbe46:: ds 1
+sbe47:: ds 1
+sbe48:: ds 7
+sbe4f:: ds 2
+sbe51:: ds 1
+sbe52:: ds 1
+sbe53:: ds 1
+sbe54:: ds 1
+sbe55:: ds 1
+sbe56:: ds 1
+
+
+SECTION "Boxes 1-7",  SRAM, BANK [2]
+	box sBox1
+	box sBox2
+	box sBox3
+	box sBox4
+	box sBox5
+	box sBox6
+	box sBox7
+
+SECTION "Boxes 8-14", SRAM, BANK [3]
+	box sBox8
+	box sBox9
+	box sBox10
+	box sBox11
+	box sBox12
+	box sBox13
+	box sBox14
