@@ -52,7 +52,7 @@ dbwww: MACRO
 
 dn: MACRO
 	rept _NARG / 2
-	db (\1) << 4 + (\2)
+	db ((\1) & %1111) << 4 + ((\2) & %1111)
 	shift
 	shift
 	endr
